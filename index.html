@@ -25,9 +25,9 @@
     <div class="flex items-center justify-between px-1 text-sm sm:text-lg font-black flex-shrink-0">
       <div class="flex items-center gap-2">
         <div id="pageIndicator" class="px-2.5 sm:px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white">
-          第 5 / 9 頁
+          第 6 / 11 頁
         </div>
-        <!-- 規格切換按鈕（九宮格 與 四乘四） -->
+        <!-- 規格切換按鈕 -->
         <button id="layoutSwitchBtn" class="px-2.5 sm:px-3 py-0.5 border-[2.5px] border-black rounded-full bg-black text-white hover:opacity-80 transition-all font-bold">
           切換為九宮格
         </button>
@@ -57,93 +57,134 @@
   </div>
 
   <script>
-    // 6x4（四乘四詞彙區，每頁 16 格，共 9 頁）
+    // 四乘四版：11 頁詞庫（啟動頁第 6 頁）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
-      2: [
+      2: [ // 細部照護與飲食需求
+        '擦嘴巴', '換姿勢', '蓋被子', '拿枕頭',
+        '要吸痰', '拍拍背', '按摩', '剪指甲',
+        '擦身體', '漱口', '喝溫水', '喝果汁',
+        '吃稀飯', '吃水果', '想吃肉', '要喝湯'
+      ],
+      3: [ // 具體部位疼痛與不適
         '頭痛', '肚子痛', '胸口痛', '腳痛',
         '手痛', '背痛', '很癢', '頭暈',
         '想吐', '抽筋', '呼吸不順', '發燒',
         '生氣', '難過', '害怕', '安心'
       ],
-      3: [
+      4: [ // 生理照護與基本動作
         '要吃', '要喝', '去廁所', '要洗澡',
         '想睡覺', '要起床', '坐下', '躺下',
         '口渴', '肚子餓', '吃藥', '換衣服',
         '太冷了', '太熱了', '這裡痛', '想回家'
       ],
-      4: [
+      5: [ // 極高頻核心（緊鄰第 6 頁左側）
         '我想', '要', '不要', '好',
         '不好', '請幫我', '謝謝', '對不起',
         '痛', '累', '舒服', '不舒服',
         '冷', '熱', '等一下', '請慢點'
       ],
-      5: Array(16).fill(''),
-      6: [
+      6: Array(16).fill(''), // 第 6 頁中心啟動空白頁
+      7: [ // 極高頻互動與應答（緊鄰第 6 頁右側）
         '是', '不是', '早安', '晚安',
         '請', '沒關係', '對', '不對',
         '在哪裡', '什麼', '誰', '這裡',
         '那裡', '現在', '等下', '沒問題'
       ],
-      7: [
+      8: [ // 日常生活環境控制
         '請開燈', '請關燈', '太吵了', '請小聲點',
         '我想看電視', '聽音樂', '我想休息', '請扶我',
         '請陪我', '不要走', '想聊聊天', '出門',
         '刷牙', '洗臉', '吃飽了', '不知道'
       ],
-      8: [
+      9: [ // 社交寒暄與禮貌應對
         '很高興', '辛苦了', '很棒', '真好吃',
         '很喜歡', '不喜歡', '不用了', '我同意',
         '沒事的', '慢慢來', '明天見', '祝好運',
         '一路平安', '多保重', '再見', '再說一次'
       ],
-      9: Array(16).fill('')
+      10: [ // 生活決策與細部溝通
+        '看手機', '開窗戶', '關窗戶', '吹電扇',
+        '開冷氣', '關冷氣', '看外面', '想睡了',
+        '不要吵', '不要動', '等等我', '再想想',
+        '都可以', '沒意見', '我明白', '聽不懂'
+      ],
+      11: Array(16).fill('')
     };
 
-    // 5x3（九宮格詞彙區，每頁 9 格，共 9 頁）
+    // 九宮格版：15 頁詞庫（啟動頁第 8 頁）
     const DEFAULT_5X3 = {
       1: Array(9).fill(''),
       2: [
-        '頭痛', '肚子痛', '想吐',
-        '很癢', '頭暈', '生氣',
-        '難過', '害怕', '安心'
+        '吃白飯', '喝溫水', '吃稀飯',
+        '喝果汁', '吃水果', '想吃肉',
+        '要喝湯', '吃飽了', '還想吃'
       ],
       3: [
+        '擦嘴巴', '換姿勢', '蓋被子',
+        '拿枕頭', '要吸痰', '拍拍背',
+        '要洗澡', '很酸', '抽筋'
+      ],
+      4: [
+        '生氣', '難過', '害怕',
+        '安心', '很煩', '緊張',
+        '放輕鬆', '好多了', '無聊'
+      ],
+      5: [
+        '頭痛', '肚子痛', '想吐',
+        '很癢', '頭暈', '發燒',
+        '呼吸不順', '胸口痛', '很脹'
+      ],
+      6: [
         '要吃', '要喝', '去廁所',
         '想睡覺', '要坐下', '要躺下',
         '吃藥', '太冷了', '太熱了'
       ],
-      4: [
+      7: [
         '我想', '要', '不要',
         '好', '請幫我', '謝謝',
         '痛', '累', '不舒服'
       ],
-      5: Array(9).fill(''),
-      6: [
+      8: Array(9).fill(''), // 第 8 頁中心啟動空白頁
+      9: [
         '是', '不是', '早安',
         '晚安', '請', '沒關係',
         '對', '不知道', '等一下'
       ],
-      7: [
+      10: [
         '請開燈', '請關燈', '太吵了',
         '我想休息', '請扶我', '不要走',
         '想看電視', '想喝水', '沒問題'
       ],
-      8: [
+      11: [
         '很高興', '辛苦了', '很棒',
         '真好吃', '很喜歡', '不用了',
         '沒事的', '慢慢來', '再見'
       ],
-      9: Array(9).fill('')
+      12: [
+        '在哪裡', '誰來了', '什麼時候',
+        '想出門', '回家', '換衣服',
+        '刷牙', '洗臉', '吃飽了'
+      ],
+      13: [
+        '聽音樂', '聊聊天', '看手機',
+        '多喝水', '請小聲', '請慢點',
+        '聽不清', '再說一次', '明天見'
+      ],
+      14: [
+        '我同意', '不同意', '都可以',
+        '都可以啦', '再想想', '等等我',
+        '我明白', '不知道', '沒意見'
+      ],
+      15: Array(9).fill('')
     };
 
-    const TOTAL_PAGES = 9;
-    let currentLayout = localStorage.getItem('aac_layout_mode_v11') || '6x4';
-    let currentPage = 5;
+    let currentLayout = localStorage.getItem('aac_layout_mode_v13') || '6x4';
+    let currentPage = currentLayout === '5x3' ? 8 : 6;
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v11')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v11')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v13')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v13')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -152,14 +193,18 @@
     const toggleEditBtn = document.getElementById('toggleEditBtn');
     const mainGrid = document.getElementById('mainGrid');
 
+    function getTotalPages() {
+      return currentLayout === '5x3' ? 15 : 11;
+    }
+
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v11', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v13', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v11', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v13', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v11', currentLayout);
+      localStorage.setItem('aac_layout_mode_v13', currentLayout);
     }
 
     function speakText(text) {
@@ -205,8 +250,8 @@
     }
 
     function renderBoard() {
-      pageIndicator.textContent = `第 ${currentPage} / ${TOTAL_PAGES} 頁`;
-      // 敘述依目前模式顯示切換至對應版面的文字
+      const total = getTotalPages();
+      pageIndicator.textContent = `第 ${currentPage} / ${total} 頁`;
       layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為九宮格' : '切換為四乘四';
       mainGrid.innerHTML = '';
 
@@ -217,7 +262,7 @@
       }
     }
 
-    // 渲染四乘四版面（6 列高 × 4 欄寬）
+    // 渲染四乘四版面（6 列高 × 4 欄寬，11 頁）
     function render6x4Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-4 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full min-h-0';
@@ -265,7 +310,7 @@
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
-    // 渲染九宮格版面（5 列高 × 3 欄寬）
+    // 渲染九宮格版面（5 列高 × 3 欄寬，15 頁）
     function render5x3Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-3 grid-rows-5 gap-1.5 sm:gap-2.5 h-full w-full min-h-0';
@@ -396,8 +441,9 @@
         check(); 
       });
       nextBtn.addEventListener('pointerup', () => {
+        const total = getTotalPages();
         if (nextPressed && !prevPressed) {
-          if (currentPage < TOTAL_PAGES) { 
+          if (currentPage < total) { 
             currentPage++; 
             renderBoard(); 
           }
@@ -409,6 +455,7 @@
 
     layoutSwitchBtn.addEventListener('click', () => {
       currentLayout = (currentLayout === '6x4') ? '5x3' : '6x4';
+      currentPage = (currentLayout === '5x3') ? 8 : 6;
       saveCurrentData();
       renderBoard();
     });
