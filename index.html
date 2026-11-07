@@ -37,11 +37,13 @@
       user-select: auto;
     }
 
-    /* 外層滿版容器 */
+    /* 外層滿版容器（支援 iOS 全螢幕安全邊距） */
     .app-container {
       width: 100%;
       height: 100%;
       padding: 8px;
+      padding-top: calc(8px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
     }
@@ -64,7 +66,7 @@
       justify-content: space-between;
       padding: 0 4px;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 18px; /* 放大字體 */
       flex-shrink: 0;
     }
     .badge-group, .action-group {
@@ -72,29 +74,35 @@
       align-items: center;
       gap: 8px;
     }
+
+    /* 上方按鈕放大 5 像素與對調位置 */
     .pill-badge {
-      padding: 2px 10px;
+      padding: 7px 15px; /* 上下左右各放大 5px */
       border: 2.5px solid #000000;
       border-radius: 9999px;
       background: #ffffff;
       color: #000000;
+      font-size: 16px;
     }
     .btn-switch {
-      padding: 2px 10px;
+      padding: 7px 15px; /* 上下左右各放大 5px */
       border: 2.5px solid #000000;
       border-radius: 9999px;
       background: #000000;
       color: #ffffff;
       font-weight: bold;
+      font-size: 16px;
       cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     .btn-edit-toggle {
       text-decoration: underline;
       cursor: pointer;
       font-weight: bold;
-      font-size: 13px;
+      font-size: 14px;
       background: none;
       border: none;
+      padding: 4px;
     }
 
     /* 主網格容器 */
@@ -257,7 +265,9 @@
       .btn-label { font-size: 1.1rem; }
       .word-text-large { font-size: 2.8rem; }
       .word-text-small { font-size: 1.6rem; }
-      .header-bar { font-size: 16px; }
+      .header-bar { font-size: 20px; }
+      .pill-badge { font-size: 18px; padding: 8px 18px; }
+      .btn-switch { font-size: 18px; padding: 8px 18px; }
       .board-card { gap: 8px; padding: 10px; }
       .layout-6x4, .layout-5x3, .words-grid-4x4, .words-grid-3x3 { gap: 8px; }
     }
@@ -268,11 +278,13 @@
   <div class="app-container">
     <div class="board-card">
       
-      <!-- 頂部資訊與切換列 -->
+      <!-- 頂部資訊與切換列（已對調順序：切換按鈕在最左側，頁碼在其右側，避開中央遮蔽） -->
       <div class="header-bar">
         <div class="badge-group">
-          <div id="pageIndicator" class="pill-badge">第 6 / 11 頁</div>
-          <button id="layoutSwitchBtn" class="btn-switch">切換為九宮格</button>
+          <!-- 切換鈕靠最左 -->
+          <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
+          <!-- 頁面切換指示器 -->
+          <div id="pageIndicator" class="pill-badge">第 8 / 15 頁</div>
         </div>
         <div class="action-group">
           <div id="modeBadge" class="pill-badge">輸入模式</div>
@@ -295,7 +307,12 @@
     // 四乘四版：11 頁詞庫（啟動頁第 6 頁）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
-      2: Array(16).fill(''),
+      2: [
+        '擦嘴巴', '換姿勢', '蓋被子', '拿枕頭',
+        '要吸痰', '拍拍背', '按摩', '剪指甲',
+        '擦身體', '漱口', '喝溫水', '喝果汁',
+        '吃稀飯', '吃水果', '想吃肉', '要喝湯'
+      ],
       3: [
         '頭痛', '肚子痛', '胸口痛', '腳痛',
         '手痛', '背痛', '很癢', '頭暈',
@@ -333,14 +350,23 @@
         '沒事的', '慢慢來', '明天見', '祝好運',
         '一路平安', '多保重', '再見', '再說一次'
       ],
-      10: Array(16).fill(''),
+      10: [
+        '看手機', '開窗戶', '關窗戶', '吹電扇',
+        '開冷氣', '關冷氣', '看外面', '想睡了',
+        '不要吵', '不要動', '等等我', '再想想',
+        '都可以', '沒意見', '我明白', '聽不懂'
+      ],
       11: Array(16).fill('')
     };
 
     // 九宮格版：15 頁詞庫（啟動頁第 8 頁）
     const DEFAULT_5X3 = {
       1: Array(9).fill(''),
-      2: Array(9).fill(''),
+      2: [
+        '吃白飯', '喝溫水', '吃稀飯',
+        '喝果汁', '吃水果', '想吃肉',
+        '要喝湯', '吃飽了', '還想吃'
+      ],
       3: [
         '擦嘴巴', '換姿勢', '蓋被子',
         '拿枕頭', '要吸痰', '拍拍背',
@@ -388,20 +414,25 @@
         '刷牙', '洗臉', '吃飽了'
       ],
       13: [
+        '聽音樂', '聊聊天', '看手機',
+        '多喝水', '請小聲', '請慢點',
+        '聽不清', '再說一次', '明天見'
+      ],
+      14: [
         '我同意', '不同意', '都可以',
         '都可以啦', '再想想', '等等我',
         '我明白', '不知道', '沒意見'
       ],
-      14: Array(9).fill(''),
       15: Array(9).fill('')
     };
 
-    let currentLayout = localStorage.getItem('aac_layout_mode_v16') || '6x4';
+    // 預設為九宮格 (5x3)，啟動頁為第 8 頁
+    let currentLayout = localStorage.getItem('aac_layout_mode_v17') || '5x3';
     let currentPage = currentLayout === '5x3' ? 8 : 6;
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v16')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v16')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v17')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v17')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -423,19 +454,15 @@
             wakeLock = null;
           });
         }
-      } catch (err) {
-        // 瀏覽器未授權或後台運行
-      }
+      } catch (err) {}
     }
 
-    // 當分頁重新回到前景時，自動重新取得鎖定
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         requestWakeLock();
       }
     });
 
-    // 初次點擊或觸控任何位置時立即啟用鎖定
     ['click', 'touchstart', 'pointerdown'].forEach((evt) => {
       document.addEventListener(evt, () => {
         if (!wakeLock) {
@@ -452,15 +479,15 @@
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v16', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v17', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v16', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v17', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v16', currentLayout);
+      localStorage.setItem('aac_layout_mode_v17', currentLayout);
     }
 
-    // 瀏覽器原生語音朗讀
+    // 瀏覽器原生離線語音合成
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -511,7 +538,7 @@
     function renderBoard() {
       const total = getTotalPages();
       pageIndicator.textContent = `第 ${currentPage} / ${total} 頁`;
-      layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為九宮格' : '切換為四乘四';
+      layoutSwitchBtn.textContent = currentLayout === '5x3' ? '切換為四乘四' : '切換為九宮格';
       mainGrid.innerHTML = '';
 
       if (currentLayout === '6x4') {
@@ -705,7 +732,7 @@
     }
 
     layoutSwitchBtn.addEventListener('click', () => {
-      currentLayout = (currentLayout === '6x4') ? '5x3' : '6x4';
+      currentLayout = (currentLayout === '5x3') ? '6x4' : '5x3';
       currentPage = (currentLayout === '5x3') ? 8 : 6;
       saveCurrentData();
       renderBoard();
