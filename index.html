@@ -57,7 +57,7 @@
   </div>
 
   <script>
-    // 6x4 詞庫（每頁 16 格，共 9 頁：第 5 頁空白；前三頁 2,3,4 與後三頁 6,7,8 為常用詞；1,9 頁空白）
+    // 6x4 詞庫（每頁 16 格，共 9 頁）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
       2: [
@@ -78,7 +78,7 @@
         '想吐', '抽筋', '呼吸不順', '發燒',
         '流汗', '沒力氣', '很脹', '這裡痛'
       ],
-      5: Array(16).fill(''), // 第 5 頁常態啟動空白
+      5: Array(16).fill(''), // 第 5 頁空白常態啟動
       6: [
         '早安', '晚安', '請', '沒關係',
         '在哪裡', '什麼', '誰', '什麼時候',
@@ -100,13 +100,13 @@
       9: Array(16).fill('')
     };
 
-    // 4x3 詞庫（每頁 6 格：2 列 × 3 欄，共 9 頁配置對應）
+    // 4x3 詞庫（4 列 × 3 欄，每頁 6 格）
     const DEFAULT_4X3 = {
       1: Array(6).fill(''),
       2: ['我想', '要', '不要', '好', '請幫我', '謝謝'],
       3: ['要喝水', '要吃東西', '去洗手間', '想睡覺', '要坐下', '要躺下'],
       4: ['這裡痛', '不舒服', '很累', '想吐', '太冷了', '太熱了'],
-      5: Array(6).fill(''), // 第 5 頁常態啟動空白
+      5: Array(6).fill(''), // 第 5 頁空白常態啟動
       6: ['是', '不是', '早安', '晚安', '請', '沒關係'],
       7: ['請開燈', '請關燈', '太吵了', '請扶我', '我想休息', '不要走'],
       8: ['很高興', '辛苦了', '真好吃', '沒事的', '慢慢來', '再見'],
@@ -114,12 +114,12 @@
     };
 
     const TOTAL_PAGES = 9;
-    let currentLayout = localStorage.getItem('aac_layout_mode_v6') || '6x4'; // '6x4' 或 '4x3'
-    let currentPage = 5; // 常態啟動第 5 頁
+    let currentLayout = localStorage.getItem('aac_layout_mode_v8') || '6x4'; // '6x4' 或 '4x3'
+    let currentPage = 5;
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v6')) || DEFAULT_6X4;
-    let data4x3 = JSON.parse(localStorage.getItem('aac_data_4x3_v6')) || DEFAULT_4X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v8')) || DEFAULT_6X4;
+    let data4x3 = JSON.parse(localStorage.getItem('aac_data_4x3_v8')) || DEFAULT_4X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -130,15 +130,14 @@
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v6', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v8', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_4x3_v6', JSON.stringify(data4x3));
+        localStorage.setItem('aac_data_4x3_v8', JSON.stringify(data4x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v6', currentLayout);
+      localStorage.setItem('aac_layout_mode_v8', currentLayout);
     }
 
-    // Web Speech API 語音朗讀
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -183,6 +182,7 @@
 
     function renderBoard() {
       pageIndicator.textContent = `第 ${currentPage} / ${TOTAL_PAGES} 頁`;
+      // 網頁按鈕敘述採用 4x3 版與 6x4 版
       layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為 4x3 版' : '切換為 6x4 版';
       mainGrid.innerHTML = '';
 
@@ -193,12 +193,12 @@
       }
     }
 
-    // 渲染 6 列 × 4 欄版本
+    // 渲染 6x4 版面（6 列高 × 4 欄寬）
     function render6x4Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-4 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full min-h-0';
 
-      // 第 1 列：前 3 欄輸入框 + 第 4 欄朗讀
+      // 第 1 列
       const dispArea = document.createElement('div');
       dispArea.className = 'col-span-3 border-[3px] border-black rounded-2xl px-3 sm:px-5 flex items-center bg-white overflow-hidden';
       const dispText = document.createElement('div');
@@ -244,12 +244,12 @@
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
-    // 渲染 4 列 × 3 欄版本（真 4 列高 × 3 欄寬）
+    // 渲染 4x3 版面（4 列高 × 3 欄寬）
     function render4x3Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-3 grid-rows-4 gap-2 sm:gap-3 h-full w-full min-h-0';
 
-      // 第 1 列（跨 3 欄）：前 2 欄為輸入框，第 3 欄為朗讀按鈕
+      // 第 1 列：前 2 欄為文字輸入區，第 3 欄為朗讀按鈕
       const dispArea = document.createElement('div');
       dispArea.className = 'col-span-2 border-[3px] border-black rounded-2xl px-3 sm:px-5 flex items-center bg-white overflow-hidden';
       const dispText = document.createElement('div');
@@ -263,7 +263,7 @@
       container.appendChild(dispArea);
       container.appendChild(speakBtn);
 
-      // 第 2 列（3 欄）：上一頁、刪除整句（無刪除單字）、下一頁
+      // 第 2 列：上一頁、刪除整句（無刪除單字）、下一頁
       const prevBtn = createNavBtn('◀', '上一頁');
       const clearBtn = createActionBtn('🗑', '刪除整句', () => {
         if (currentInput.length > 0) {
@@ -277,7 +277,7 @@
       container.appendChild(clearBtn);
       container.appendChild(nextBtn);
 
-      // 第 3~4 列（每列 3 欄，共 2 列 × 3 欄 = 6 格）
+      // 第 3~4 列：2 列 × 3 欄 = 6 格特大按鈕
       const gridItems = document.createElement('div');
       gridItems.className = 'col-span-3 row-span-2 grid grid-cols-3 grid-rows-2 gap-2 sm:gap-3 min-h-0';
       populateWordButtons(gridItems, data4x3[currentPage] || Array(6).fill(''), data4x3, true);
@@ -346,7 +346,7 @@
       });
     }
 
-    // 雙鍵同時按下解鎖邏輯
+    // 雙鍵同時按下偵測與翻頁邏輯
     function bindSimultaneousPress(prevBtn, nextBtn) {
       let prevPressed = false;
       let nextPressed = false;
@@ -359,19 +359,31 @@
         }
       }
 
-      prevBtn.addEventListener('pointerdown', () => { prevPressed = true; check(); });
+      prevBtn.addEventListener('pointerdown', () => { 
+        prevPressed = true; 
+        check(); 
+      });
       prevBtn.addEventListener('pointerup', () => {
         if (prevPressed && !nextPressed) {
-          if (currentPage > 1) { currentPage--; renderBoard(); }
+          if (currentPage > 1) { 
+            currentPage--; 
+            renderBoard(); 
+          }
         }
         prevPressed = false;
       });
       prevBtn.addEventListener('pointerleave', () => { prevPressed = false; });
 
-      nextBtn.addEventListener('pointerdown', () => { prevPressed = true; check(); });
+      nextBtn.addEventListener('pointerdown', () => { 
+        nextPressed = true; 
+        check(); 
+      });
       nextBtn.addEventListener('pointerup', () => {
         if (nextPressed && !prevPressed) {
-          if (currentPage < TOTAL_PAGES) { currentPage++; renderBoard(); }
+          if (currentPage < TOTAL_PAGES) { 
+            currentPage++; 
+            renderBoard(); 
+          }
         }
         nextPressed = false;
       });
