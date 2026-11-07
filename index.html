@@ -25,7 +25,7 @@
     <!-- 頂端資訊列 -->
     <div class="flex items-center justify-between px-1 text-base sm:text-xl font-black flex-shrink-0">
       <div id="pageIndicator" class="px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white">
-        第 4 / 7 頁
+        第 5 / 9 頁
       </div>
       <div id="modeBadge" class="px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white text-black transition-colors">
         輸入模式
@@ -86,37 +86,52 @@
 
     <!-- 底部操作提示 -->
     <div class="text-center text-xs sm:text-base font-bold text-gray-700 flex-shrink-0">
-      提示：點擊「🔊 朗讀」或點擊輸入框可朗讀整句；按鍵點擊時亦會自動朗讀單詞。
+      提示：點擊「🔊 朗讀」或文字框可朗讀整句；同時按住「上一頁」與「下一頁」可切換編輯模式。
     </div>
 
   </div>
 
   <script>
+    // 9 頁最新排版：第 5 頁空白，原 5、6 頁後移至 6、7 頁，原 7 頁已移除
     const DEFAULT_PAGES = {
       1: Array(16).fill(''),
       2: Array(16).fill(''),
       3: [
+        '我想休息', '請開燈', '請關燈', '太冷了',
+        '太熱了', '我想坐下', '我想躺下', '需要喝水',
+        '肚子餓了', '我想看電視', '請扶我一下', '我要吃藥',
+        '要去洗手間', '這裡會痛', '請不要走', '我想出門'
+      ],
+      4: [
         '我想', '要', '不要', '好',
         '要吃', '要喝', '去廁所', '痛',
         '累', '舒服', '不舒服', '高興',
         '生氣', '請幫忙', '謝謝', '等一下'
       ],
-      4: Array(16).fill(''),
-      5: [
+      5: Array(16).fill(''), // 第 5 頁改為空白頁（常態預設啟動）
+      6: [ // 原第 5 頁移至此處
         '早安', '晚安', '是', '不是',
         '請', '對不起', '沒關係', '在哪裡',
         '什麼', '誰', '多少', '這裡',
         '那裡', '現在', '等下', '回家'
       ],
-      6: Array(16).fill(''),
-      7: Array(16).fill('')
+      7: [ // 原第 6 頁移至此處
+        '頭痛', '肚子痛', '口渴', '很癢',
+        '想睡覺', '請慢一點', '聽不清楚', '太吵了',
+        '我想洗澡', '請換衣服', '沒問題', '不知道',
+        '再說一次', '不用了', '很棒', '我想回家'
+      ],
+      8: Array(16).fill(''),
+      9: Array(16).fill('')
     };
 
-    const TOTAL_PAGES = 7;
-    let currentPage = 4;
+    const TOTAL_PAGES = 9;
+    let currentPage = 5; // 常態啟動為第 5 頁
     let isEditMode = false;
 
-    let pagesData = JSON.parse(localStorage.getItem('aac_pages_data')) || DEFAULT_PAGES;
+    // 升級至 v4 本端儲存 key，確保順利帶入最新排版
+    let loadedData = JSON.parse(localStorage.getItem('aac_pages_data_v4'));
+    let pagesData = (loadedData && Object.keys(loadedData).length === TOTAL_PAGES) ? loadedData : DEFAULT_PAGES;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const displayArea = document.getElementById('displayArea');
@@ -130,18 +145,172 @@
     const clearBtn = document.getElementById('clearBtn');
     const toggleEditBtn = document.getElementById('toggleEditBtn');
 
-    // 核心語音合成朗讀函數
+    // 瀏覽器原生中文語音合成
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
-      
-      // 停止先前尚未播完的語音，避免重疊
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'zh-TW'; // 設定台灣中文發音
-      utterance.rate = 0.95;    // 語速略為放緩，更易於溝通聽辨
+      utterance.lang = 'zh-TW';
+      utterance.rate = 0.95;
       utterance.pitch = 1.0;
 
-      // 優先尋找繁體中文 (zh-TW) 語音包
       const voices = window.speechSynthesis.getVoices();
-      const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang.includes('
+      const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang.includes('TW'));
+      if (twVoice) {
+        utterance.voice = twVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+
+    function saveData() {
+      localStorage.setItem('aac_pages_data_v4', JSON.stringify(pagesData));
+      localStorage.setItem('aac_current_input', currentInput);
+    }
+
+    function updateDisplay() {
+      displayArea.textContent = currentInput || '（請點選下方字詞）';
+      displayArea.className = currentInput 
+        ? "text-3xl sm:text-5xl md:text-6xl font-black tracking-wide overflow-x-auto whitespace-nowrap scrollbar-none flex-1 text-black cursor-pointer"
+        : "text-3xl sm:text-5xl md:text-6xl font-black tracking-wide overflow-x-auto whitespace-nowrap scrollbar-none flex-1 text-gray-300 cursor-pointer";
+      displayArea.scrollLeft = displayArea.scrollWidth;
+      saveData();
+    }
+
+    function setEditMode(state) {
+      isEditMode = state;
+      if (isEditMode) {
+        modeBadge.textContent = '✏️ 編輯模式中';
+        modeBadge.className = 'px-3 py-0.5 border-[2.5px] border-black rounded-full bg-black text-white font-black animate-bounce';
+      } else {
+        modeBadge.textContent = '輸入模式';
+        modeBadge.className = 'px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white text-black font-black';
+      }
+      renderGrid();
+    }
+
+    function renderGrid() {
+      pageIndicator.textContent = `第 ${currentPage} / ${TOTAL_PAGES} 頁`;
+      gridContainer.innerHTML = '';
+      const items = pagesData[currentPage] || Array(16).fill('');
+
+      items.forEach((text, index) => {
+        const btn = document.createElement('button');
+        btn.className = `border-[3px] border-black rounded-2xl flex items-center justify-center p-1 sm:p-2 font-black transition-all active:scale-95 active:bg-black active:text-white ${
+          isEditMode ? 'border-dashed bg-yellow-50' : 'bg-white'
+        }`;
+
+        const textSpan = document.createElement('span');
+        const textLen = (text || '').length;
+        if (textLen > 4) {
+          textSpan.className = 'text-base sm:text-2xl md:text-3xl font-black leading-tight text-center break-words max-h-full overflow-hidden';
+        } else {
+          textSpan.className = 'text-2xl sm:text-4xl md:text-5xl font-black leading-tight text-center break-words max-h-full overflow-hidden';
+        }
+
+        textSpan.textContent = text || (isEditMode ? '＋' : '');
+        btn.appendChild(textSpan);
+
+        btn.addEventListener('click', () => {
+          if (isEditMode) {
+            const newText = prompt(`修改第 ${currentPage} 頁第 ${index + 1} 格內容：`, text);
+            if (newText !== null) {
+              pagesData[currentPage][index] = newText.trim();
+              saveData();
+              renderGrid();
+            }
+          } else {
+            if (text) {
+              currentInput += text;
+              updateDisplay();
+            }
+          }
+        });
+
+        gridContainer.appendChild(btn);
+      });
+    }
+
+    speakAllBtn.addEventListener('click', () => {
+      if (currentInput) speakText(currentInput);
+    });
+
+    displayArea.addEventListener('click', () => {
+      if (currentInput) speakText(currentInput);
+    });
+
+    delCharBtn.addEventListener('click', () => {
+      if (currentInput.length > 0) {
+        currentInput = currentInput.slice(0, -1);
+        updateDisplay();
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (currentInput.length > 0) {
+        currentInput = '';
+        updateDisplay();
+      }
+    });
+
+    function gotoPrev() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderGrid();
+      }
+    }
+
+    function gotoNext() {
+      if (currentPage < TOTAL_PAGES) {
+        currentPage++;
+        renderGrid();
+      }
+    }
+
+    let prevPressed = false;
+    let nextPressed = false;
+
+    function checkSimultaneousPress() {
+      if (prevPressed && nextPressed) {
+        setEditMode(!isEditMode);
+        prevPressed = false;
+        nextPressed = false;
+      }
+    }
+
+    prevBtn.addEventListener('pointerdown', () => {
+      prevPressed = true;
+      checkSimultaneousPress();
+    });
+    prevBtn.addEventListener('pointerup', () => {
+      if (prevPressed && !nextPressed) gotoPrev();
+      prevPressed = false;
+    });
+    prevBtn.addEventListener('pointerleave', () => { prevPressed = false; });
+
+    nextBtn.addEventListener('pointerdown', () => {
+      nextPressed = true;
+      checkSimultaneousPress();
+    });
+    nextBtn.addEventListener('pointerup', () => {
+      if (nextPressed && !prevPressed) gotoNext();
+      nextPressed = false;
+    });
+    nextBtn.addEventListener('pointerleave', () => { nextPressed = false; });
+
+    toggleEditBtn.addEventListener('click', () => {
+      setEditMode(!isEditMode);
+    });
+
+    updateDisplay();
+    renderGrid();
+  </script>
+</body>
+</html>
