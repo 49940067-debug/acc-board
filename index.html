@@ -27,9 +27,9 @@
         <div id="pageIndicator" class="px-2.5 sm:px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white">
           第 5 / 9 頁
         </div>
-        <!-- 規格切換按鈕（6x4 與 5x3 九宮格版） -->
+        <!-- 規格切換按鈕（九宮格 與 四乘四） -->
         <button id="layoutSwitchBtn" class="px-2.5 sm:px-3 py-0.5 border-[2.5px] border-black rounded-full bg-black text-white hover:opacity-80 transition-all font-bold">
-          切換為 5x3 版 (九宮格)
+          切換為九宮格
         </button>
       </div>
 
@@ -46,7 +46,7 @@
 
     <!-- 核心動態方格容器 -->
     <div id="mainGrid" class="flex-1 w-full min-h-0">
-      <!-- 由 JS 動態掛載 5x3 或 6x4 -->
+      <!-- 由 JS 動態掛載九宮格或四乘四 -->
     </div>
 
     <!-- 底部操作提示 -->
@@ -57,77 +57,77 @@
   </div>
 
   <script>
-    // 6x4 詞庫（每頁 16 格，共 9 頁）
+    // 6x4（四乘四詞彙區，每頁 16 格，共 9 頁）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
       2: [
-        '我想', '要', '不要', '好',
-        '不好', '請幫我', '謝謝', '對不起',
-        '是', '不是', '痛', '累',
-        '舒服', '不舒服', '冷', '熱'
+        '頭痛', '肚子痛', '胸口痛', '腳痛',
+        '手痛', '背痛', '很癢', '頭暈',
+        '想吐', '抽筋', '呼吸不順', '發燒',
+        '生氣', '難過', '害怕', '安心'
       ],
       3: [
         '要吃', '要喝', '去廁所', '要洗澡',
         '想睡覺', '要起床', '坐下', '躺下',
-        '吃飽了', '口渴', '肚子餓', '吃藥',
-        '要出門', '回家', '換衣服', '刷牙'
+        '口渴', '肚子餓', '吃藥', '換衣服',
+        '太冷了', '太熱了', '這裡痛', '想回家'
       ],
       4: [
-        '頭痛', '肚子痛', '胸口痛', '腳痛',
-        '手痛', '背痛', '很癢', '頭暈',
-        '想吐', '抽筋', '呼吸不順', '發燒',
-        '流汗', '沒力氣', '很脹', '這裡痛'
+        '我想', '要', '不要', '好',
+        '不好', '請幫我', '謝謝', '對不起',
+        '痛', '累', '舒服', '不舒服',
+        '冷', '熱', '等一下', '請慢點'
       ],
-      5: Array(16).fill(''), // 第 5 頁空白常態啟動
+      5: Array(16).fill(''),
       6: [
-        '早安', '晚安', '請', '沒關係',
-        '在哪裡', '什麼', '誰', '什麼時候',
-        '多少', '這裡', '那裡', '現在',
-        '等一下', '慢一點', '太快了', '聽不清楚'
+        '是', '不是', '早安', '晚安',
+        '請', '沒關係', '對', '不對',
+        '在哪裡', '什麼', '誰', '這裡',
+        '那裡', '現在', '等下', '沒問題'
       ],
       7: [
-        '請開燈', '請關燈', '太冷了', '太熱了',
-        '我想看電視', '聽音樂', '太吵了', '請小聲點',
-        '請扶我', '請陪我', '不要走', '我想休息',
-        '想聊聊天', '沒問題', '不知道', '再說一次'
+        '請開燈', '請關燈', '太吵了', '請小聲點',
+        '我想看電視', '聽音樂', '我想休息', '請扶我',
+        '請陪我', '不要走', '想聊聊天', '出門',
+        '刷牙', '洗臉', '吃飽了', '不知道'
       ],
       8: [
-        '很高興', '生氣', '難過', '緊張',
-        '害怕', '安心', '辛苦了', '很棒',
-        '真好吃', '不喜歡', '很喜歡', '不用了',
-        '我同意', '沒事的', '慢慢來', '再見'
+        '很高興', '辛苦了', '很棒', '真好吃',
+        '很喜歡', '不喜歡', '不用了', '我同意',
+        '沒事的', '慢慢來', '明天見', '祝好運',
+        '一路平安', '多保重', '再見', '再說一次'
       ],
       9: Array(16).fill('')
     };
 
-    // 5x3 詞庫（5 列高 × 3 欄寬，下方 3x3 九宮格共 9 格詞彙）
+    // 5x3（九宮格詞彙區，每頁 9 格，共 9 頁）
     const DEFAULT_5X3 = {
       1: Array(9).fill(''),
       2: [
-        '我想', '要', '不要',
-        '好', '請幫我', '謝謝',
-        '對不起', '痛', '累'
+        '頭痛', '肚子痛', '想吐',
+        '很癢', '頭暈', '生氣',
+        '難過', '害怕', '安心'
       ],
       3: [
         '要吃', '要喝', '去廁所',
-        '想睡覺', '要起床', '坐下',
-        '要躺下', '吃藥', '回家'
+        '想睡覺', '要坐下', '要躺下',
+        '吃藥', '太冷了', '太熱了'
       ],
       4: [
-        '這裡痛', '頭痛', '肚子痛',
-        '不舒服', '很癢', '頭暈',
-        '想吐', '太冷了', '太熱了'
+        '我想', '要', '不要',
+        '好', '請幫我', '謝謝',
+        '痛', '累', '不舒服'
       ],
-      5: Array(9).fill(''), // 第 5 頁空白常態啟動
+      5: Array(9).fill(''),
       6: [
         '是', '不是', '早安',
         '晚安', '請', '沒關係',
-        '在哪裡', '什麼', '等一下'
+        '對', '不知道', '等一下'
       ],
       7: [
         '請開燈', '請關燈', '太吵了',
-        '我想看電視', '請扶我', '我想休息',
-        '不要走', '沒問題', '不知道'
+        '我想休息', '請扶我', '不要走',
+        '想看電視', '想喝水', '沒問題'
       ],
       8: [
         '很高興', '辛苦了', '很棒',
@@ -138,12 +138,12 @@
     };
 
     const TOTAL_PAGES = 9;
-    let currentLayout = localStorage.getItem('aac_layout_mode_v9') || '6x4'; // '6x4' 或 '5x3'
+    let currentLayout = localStorage.getItem('aac_layout_mode_v11') || '6x4';
     let currentPage = 5;
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v9')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v9')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v11')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v11')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -154,12 +154,12 @@
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v9', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v11', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v9', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v11', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v9', currentLayout);
+      localStorage.setItem('aac_layout_mode_v11', currentLayout);
     }
 
     function speakText(text) {
@@ -206,7 +206,8 @@
 
     function renderBoard() {
       pageIndicator.textContent = `第 ${currentPage} / ${TOTAL_PAGES} 頁`;
-      layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為 5x3 版' : '切換為 6x4 版';
+      // 敘述依目前模式顯示切換至對應版面的文字
+      layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為九宮格' : '切換為四乘四';
       mainGrid.innerHTML = '';
 
       if (currentLayout === '6x4') {
@@ -216,12 +217,11 @@
       }
     }
 
-    // 渲染 6x4 版面（6 列高 × 4 欄寬）
+    // 渲染四乘四版面（6 列高 × 4 欄寬）
     function render6x4Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-4 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full min-h-0';
 
-      // 第 1 列：3 欄輸入框 + 1 欄朗讀
       const dispArea = document.createElement('div');
       dispArea.className = 'col-span-3 border-[3px] border-black rounded-2xl px-3 sm:px-5 flex items-center bg-white overflow-hidden';
       const dispText = document.createElement('div');
@@ -235,7 +235,6 @@
       container.appendChild(dispArea);
       container.appendChild(speakBtn);
 
-      // 第 2 列：上一頁、刪除單字、刪除整句、下一頁
       const prevBtn = createNavBtn('◀', '上一頁');
       const delCharBtn = createActionBtn('⌫', '刪除單字', () => {
         if (currentInput.length > 0) {
@@ -256,7 +255,6 @@
       container.appendChild(clearBtn);
       container.appendChild(nextBtn);
 
-      // 第 3~6 列：4 列 × 4 欄 = 16 格
       const gridItems = document.createElement('div');
       gridItems.className = 'col-span-4 row-span-4 grid grid-cols-4 grid-rows-4 gap-1.5 sm:gap-2.5 min-h-0';
       populateWordButtons(gridItems, data6x4[currentPage] || Array(16).fill(''), data6x4, false);
@@ -267,12 +265,11 @@
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
-    // 渲染 5x3 版面（5 列高 × 3 欄寬，下方 3x3 九宮格）
+    // 渲染九宮格版面（5 列高 × 3 欄寬）
     function render5x3Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-3 grid-rows-5 gap-1.5 sm:gap-2.5 h-full w-full min-h-0';
 
-      // 第 1 列：前 2 欄文字輸入區，第 3 欄朗讀按鈕
       const dispArea = document.createElement('div');
       dispArea.className = 'col-span-2 border-[3px] border-black rounded-2xl px-3 sm:px-5 flex items-center bg-white overflow-hidden';
       const dispText = document.createElement('div');
@@ -286,7 +283,6 @@
       container.appendChild(dispArea);
       container.appendChild(speakBtn);
 
-      // 第 2 列：上一頁、刪除整句（無刪除單字）、下一頁
       const prevBtn = createNavBtn('◀', '上一頁');
       const clearBtn = createActionBtn('🗑', '刪除整句', () => {
         if (currentInput.length > 0) {
@@ -300,7 +296,6 @@
       container.appendChild(clearBtn);
       container.appendChild(nextBtn);
 
-      // 第 3~5 列：3 列 × 3 欄 = 9 格（標準九宮格）
       const gridItems = document.createElement('div');
       gridItems.className = 'col-span-3 row-span-3 grid grid-cols-3 grid-rows-3 gap-1.5 sm:gap-2.5 min-h-0';
       populateWordButtons(gridItems, data5x3[currentPage] || Array(9).fill(''), data5x3, true);
