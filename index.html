@@ -37,13 +37,15 @@
       user-select: auto;
     }
 
-    /* 外層滿版容器（支援 iOS 全螢幕安全邊距） */
+    /* 外層滿版容器（保留安全區域） */
     .app-container {
       width: 100%;
       height: 100%;
       padding: 8px;
       padding-top: calc(8px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      padding-left: calc(8px + env(safe-area-inset-left, 0px));
+      padding-right: calc(8px + env(safe-area-inset-right, 0px));
       display: flex;
       flex-direction: column;
     }
@@ -59,14 +61,14 @@
       gap: 6px;
     }
 
-    /* 頂部狀態列 */
+    /* 頂部狀態列（復原為原始比例尺寸） */
     .header-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 4px;
       font-weight: 900;
-      font-size: 18px; /* 放大字體 */
+      font-size: 14px;
       flex-shrink: 0;
     }
     .badge-group, .action-group {
@@ -75,34 +77,30 @@
       gap: 8px;
     }
 
-    /* 上方按鈕放大 5 像素與對調位置 */
+    /* 頂部按鈕復原為原始大小 */
     .pill-badge {
-      padding: 7px 15px; /* 上下左右各放大 5px */
+      padding: 2px 10px;
       border: 2.5px solid #000000;
       border-radius: 9999px;
       background: #ffffff;
       color: #000000;
-      font-size: 16px;
     }
     .btn-switch {
-      padding: 7px 15px; /* 上下左右各放大 5px */
+      padding: 2px 10px;
       border: 2.5px solid #000000;
       border-radius: 9999px;
       background: #000000;
       color: #ffffff;
       font-weight: bold;
-      font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     .btn-edit-toggle {
       text-decoration: underline;
       cursor: pointer;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 13px;
       background: none;
       border: none;
-      padding: 4px;
     }
 
     /* 主網格容器 */
@@ -265,9 +263,7 @@
       .btn-label { font-size: 1.1rem; }
       .word-text-large { font-size: 2.8rem; }
       .word-text-small { font-size: 1.6rem; }
-      .header-bar { font-size: 20px; }
-      .pill-badge { font-size: 18px; padding: 8px 18px; }
-      .btn-switch { font-size: 18px; padding: 8px 18px; }
+      .header-bar { font-size: 16px; }
       .board-card { gap: 8px; padding: 10px; }
       .layout-6x4, .layout-5x3, .words-grid-4x4, .words-grid-3x3 { gap: 8px; }
     }
@@ -278,13 +274,11 @@
   <div class="app-container">
     <div class="board-card">
       
-      <!-- 頂部資訊與切換列（已對調順序：切換按鈕在最左側，頁碼在其右側，避開中央遮蔽） -->
+      <!-- 頂部資訊與切換列（已復原原始順序：頁碼在左、規格切換按鈕在其右） -->
       <div class="header-bar">
         <div class="badge-group">
-          <!-- 切換鈕靠最左 -->
-          <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
-          <!-- 頁面切換指示器 -->
           <div id="pageIndicator" class="pill-badge">第 8 / 15 頁</div>
+          <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
         </div>
         <div class="action-group">
           <div id="modeBadge" class="pill-badge">輸入模式</div>
@@ -307,7 +301,12 @@
     // 四乘四版：11 頁詞庫（啟動頁第 6 頁）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
-      2: Array(16).fill(''),
+      2: [
+        '擦嘴巴', '換姿勢', '蓋被子', '拿枕頭',
+        '要吸痰', '拍拍背', '按摩', '剪指甲',
+        '擦身體', '漱口', '喝溫水', '喝果汁',
+        '吃稀飯', '吃水果', '想吃肉', '要喝湯'
+      ],
       3: [
         '頭痛', '肚子痛', '胸口痛', '腳痛',
         '手痛', '背痛', '很癢', '頭暈',
@@ -326,7 +325,7 @@
         '痛', '累', '舒服', '不舒服',
         '冷', '熱', '等一下', '請慢點'
       ],
-      6: Array(16).fill(''), // 第 6 頁中心啟動空白頁
+      6: Array(16).fill(''),
       7: [
         '是', '不是', '早安', '晚安',
         '請', '沒關係', '對', '不對',
@@ -345,14 +344,22 @@
         '沒事的', '慢慢來', '明天見', '祝好運',
         '一路平安', '多保重', '再見', '再說一次'
       ],
-      10: Array(16).fill(''),
+      10: [
+        '看手機', '開窗戶', '關窗戶', '吹電扇',
+        '開冷氣', '關冷氣', '看外面', '想睡了',
+        '不要吵', '不要動', '等等我', '再想想',
+        '都可以', '沒意見', '我明白', '聽不懂'
+      ],
       11: Array(16).fill('')
     };
 
     // 九宮格版：15 頁詞庫（啟動頁第 8 頁）
     const DEFAULT_5X3 = {
       1: Array(9).fill(''),
-      2: Array(9).fill(''),
+      2: [
+        '吃白飯', '喝溫水', '吃稀飯',
+        '喝果汁', '吃水果', '想吃肉',
+        '要喝湯', '吃飽了', '還想吃'
       ],
       3: [
         '擦嘴巴', '換姿勢', '蓋被子',
@@ -379,7 +386,7 @@
         '好', '請幫我', '謝謝',
         '痛', '累', '不舒服'
       ],
-      8: Array(9).fill(''), // 第 8 頁中心啟動空白頁
+      8: Array(9).fill(''),
       9: [
         '是', '不是', '早安',
         '晚安', '請', '沒關係',
@@ -405,17 +412,21 @@
         '多喝水', '請小聲', '請慢點',
         '聽不清', '再說一次', '明天見'
       ],
-      14:Array(9).fill(''),
+      14: [
+        '我同意', '不同意', '都可以',
+        '都可以啦', '再想想', '等等我',
+        '我明白', '不知道', '沒意見'
+      ],
       15: Array(9).fill('')
     };
 
     // 預設為九宮格 (5x3)，啟動頁為第 8 頁
-    let currentLayout = localStorage.getItem('aac_layout_mode_v17') || '5x3';
+    let currentLayout = localStorage.getItem('aac_layout_mode_v18') || '5x3';
     let currentPage = currentLayout === '5x3' ? 8 : 6;
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v17')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v17')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v18')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v18')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -462,12 +473,12 @@
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v17', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v18', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v17', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v18', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v17', currentLayout);
+      localStorage.setItem('aac_layout_mode_v18', currentLayout);
     }
 
     // 瀏覽器原生離線語音合成
