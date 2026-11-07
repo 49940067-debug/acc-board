@@ -414,12 +414,12 @@
       15: Array(9).fill('')
     };
 
-    let currentLayout = localStorage.getItem('aac_layout_mode_v15') || '6x4';
+    let currentLayout = localStorage.getItem('aac_layout_mode_v16') || '6x4';
     let currentPage = currentLayout === '5x3' ? 8 : 6;
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v15')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v15')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v16')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v16')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -428,21 +428,57 @@
     const toggleEditBtn = document.getElementById('toggleEditBtn');
     const mainGrid = document.getElementById('mainGrid');
 
+    // ==========================================
+    // 螢幕常亮控制（Screen Wake Lock API）
+    // ==========================================
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => {
+            wakeLock = null;
+          });
+        }
+      } catch (err) {
+        // 瀏覽器未授權或後台運行
+      }
+    }
+
+    // 當分頁重新回到前景時，自動重新取得鎖定
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    });
+
+    // 初次點擊或觸控任何位置時立即啟用鎖定
+    ['click', 'touchstart', 'pointerdown'].forEach((evt) => {
+      document.addEventListener(evt, () => {
+        if (!wakeLock) {
+          requestWakeLock();
+        }
+      }, { once: false });
+    });
+
+    requestWakeLock();
+
     function getTotalPages() {
       return currentLayout === '5x3' ? 15 : 11;
     }
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v15', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v16', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v15', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v16', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v15', currentLayout);
+      localStorage.setItem('aac_layout_mode_v16', currentLayout);
     }
 
-    // 瀏覽器原生語音朗讀（支援離線）
+    // 瀏覽器原生語音朗讀
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
