@@ -30,25 +30,25 @@
       <div id="modeBadge" class="px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white text-black transition-colors">
         輸入模式
       </div>
-      <!-- 電腦輔助切換按鈕 -->
-      <button id="toggleEditBtn" class="text-sm sm:text-lg underline cursor-pointer hover:opacity-70 font-bold">
-        電腦點擊切換編輯
+      <!-- 電腦輔助切換按鈕（需連點兩次觸發） -->
+      <button id="toggleEditBtn" class="text-xs sm:text-base underline cursor-pointer hover:opacity-70 font-bold select-none">
+        連點兩次切換編輯
       </button>
     </div>
 
     <!-- 6x4 核心方格佈局 -->
     <div class="grid grid-cols-4 grid-rows-6 gap-1.5 sm:gap-2.5 flex-1 w-full min-h-0">
       
-      <!-- 第一排：合併為跨 4 格的大型輸出區，右側附帶「朗讀整句」快捷鍵 (Row 1, Col 1~4) -->
+      <!-- 第一排：合併為跨 4 格的大型輸出區，右側配置加大版「朗讀整句」快捷鍵 (Row 1, Col 1~4) -->
       <div class="col-span-4 row-span-1 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-between bg-white overflow-hidden gap-2">
         <div id="displayArea" class="text-3xl sm:text-5xl md:text-6xl font-black tracking-wide overflow-x-auto whitespace-nowrap scrollbar-none flex-1 text-black cursor-pointer" title="點擊朗讀整句">
           <!-- 動態輸入文字 -->
         </div>
         
-        <!-- 朗讀整句專用按鈕 -->
-        <button id="speakAllBtn" class="border-[2.5px] border-black rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-white font-black text-base sm:text-2xl flex items-center gap-1 active:bg-black active:text-white transition-all flex-shrink-0" title="朗讀整句">
+        <!-- 加大版朗讀按鈕 -->
+        <button id="speakAllBtn" class="border-[3px] border-black rounded-2xl px-3 sm:px-6 py-2 sm:py-3.5 bg-white font-black text-xl sm:text-3xl flex items-center gap-1.5 sm:gap-2 active:bg-black active:text-white transition-all flex-shrink-0" title="朗讀整句">
           <span>🔊</span>
-          <span class="text-xs sm:text-lg">朗讀</span>
+          <span class="text-sm sm:text-2xl">朗讀</span>
         </button>
       </div>
 
@@ -84,15 +84,14 @@
 
     </div>
 
-    <!-- 底部操作提示 -->
-    <div class="text-center text-xs sm:text-base font-bold text-gray-700 flex-shrink-0">
-      提示：點擊「🔊 朗讀」或文字框可朗讀整句；同時按住「上一頁」與「下一頁」可切換編輯模式。
+    <!-- 底部微型操作提示（縮小版） -->
+    <div class="text-center text-[10px] sm:text-xs text-gray-500 font-medium flex-shrink-0">
+      提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁（或連點兩次右上按鈕）切換編輯模式
     </div>
 
   </div>
 
   <script>
-    // 9 頁最新排版：第 5 頁空白，原 5、6 頁後移至 6、7 頁，原 7 頁已移除
     const DEFAULT_PAGES = {
       1: Array(16).fill(''),
       2: Array(16).fill(''),
@@ -108,14 +107,14 @@
         '累', '舒服', '不舒服', '高興',
         '生氣', '請幫忙', '謝謝', '等一下'
       ],
-      5: Array(16).fill(''), // 第 5 頁改為空白頁（常態預設啟動）
-      6: [ // 原第 5 頁移至此處
+      5: Array(16).fill(''), // 第 5 頁空白常態預設啟動
+      6: [
         '早安', '晚安', '是', '不是',
         '請', '對不起', '沒關係', '在哪裡',
         '什麼', '誰', '多少', '這裡',
         '那裡', '現在', '等下', '回家'
       ],
-      7: [ // 原第 6 頁移至此處
+      7: [
         '頭痛', '肚子痛', '口渴', '很癢',
         '想睡覺', '請慢一點', '聽不清楚', '太吵了',
         '我想洗澡', '請換衣服', '沒問題', '不知道',
@@ -126,10 +125,9 @@
     };
 
     const TOTAL_PAGES = 9;
-    let currentPage = 5; // 常態啟動為第 5 頁
+    let currentPage = 5;
     let isEditMode = false;
 
-    // 升級至 v4 本端儲存 key，確保順利帶入最新排版
     let loadedData = JSON.parse(localStorage.getItem('aac_pages_data_v4'));
     let pagesData = (loadedData && Object.keys(loadedData).length === TOTAL_PAGES) ? loadedData : DEFAULT_PAGES;
     let currentInput = localStorage.getItem('aac_current_input') || '';
@@ -145,7 +143,7 @@
     const clearBtn = document.getElementById('clearBtn');
     const toggleEditBtn = document.getElementById('toggleEditBtn');
 
-    // 瀏覽器原生中文語音合成
+    // 瀏覽器原生語音合成
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -238,6 +236,7 @@
       });
     }
 
+    // 朗讀整句按鈕與顯示區點擊
     speakAllBtn.addEventListener('click', () => {
       if (currentInput) speakText(currentInput);
     });
@@ -305,8 +304,28 @@
     });
     nextBtn.addEventListener('pointerleave', () => { nextPressed = false; });
 
+    // 連點兩次（400 毫秒內）切換編輯模式邏輯
+    let lastClickTime = 0;
+    let clickTimeout = null;
+
     toggleEditBtn.addEventListener('click', () => {
-      setEditMode(!isEditMode);
+      const currentTime = new Date().getTime();
+      const timeDiff = currentTime - lastClickTime;
+
+      if (timeDiff < 400 && timeDiff > 0) {
+        clearTimeout(clickTimeout);
+        setEditMode(!isEditMode);
+        toggleEditBtn.textContent = '連點兩次切換編輯';
+        lastClickTime = 0;
+      } else {
+        lastClickTime = currentTime;
+        toggleEditBtn.textContent = '請再點一下切換！';
+        clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(() => {
+          toggleEditBtn.textContent = '連點兩次切換編輯';
+          lastClickTime = 0;
+        }, 1200);
+      }
     });
 
     updateDisplay();
