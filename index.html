@@ -28,9 +28,9 @@
         <div id="pageIndicator" class="px-2.5 sm:px-3 py-0.5 border-[2.5px] border-black rounded-full bg-white">
           第 5 / 9 頁
         </div>
-        <!-- 6x4 與 4x3 規格切換按鈕 -->
+        <!-- 6x4 與 3x4 規格切換按鈕 -->
         <button id="layoutSwitchBtn" class="px-2.5 sm:px-3 py-0.5 border-[2.5px] border-black rounded-full bg-black text-white hover:opacity-80 transition-all font-bold">
-          切換為 4x3 版
+          切換為 3x4 版
         </button>
       </div>
 
@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <!-- 核心動態方格區域（由 JS 根據 6x4 或 4x3 動態掛載與渲染） -->
+    <!-- 核心動態方格區域 -->
     <div id="mainGrid" class="flex-1 w-full min-h-0">
       <!-- 動態掛載方格結構 -->
     </div>
@@ -91,8 +91,8 @@
       9: Array(16).fill('')
     };
 
-    // 預設 4x3 詞庫（每頁 4 格）
-    const DEFAULT_4X3 = {
+    // 預設 3x4 詞庫（每頁 4 格）
+    const DEFAULT_3X4 = {
       1: Array(4).fill(''),
       2: Array(4).fill(''),
       3: ['我想休息', '需要喝水', '去洗手間', '這裡會痛'],
@@ -105,13 +105,12 @@
     };
 
     const TOTAL_PAGES = 9;
-    let currentLayout = localStorage.getItem('aac_layout_mode') || '6x4'; // '6x4' 或 '4x3'
+    let currentLayout = localStorage.getItem('aac_layout_mode') || '6x4';
     let currentPage = 5;
     let isEditMode = false;
 
-    // 載入本地存儲數據
     let data6x4 = JSON.parse(localStorage.getItem('aac_pages_data_v4')) || DEFAULT_6X4;
-    let data4x3 = JSON.parse(localStorage.getItem('aac_pages_data_4x3')) || DEFAULT_4X3;
+    let data3x4 = JSON.parse(localStorage.getItem('aac_pages_data_3x4')) || DEFAULT_3X4;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     const pageIndicator = document.getElementById('pageIndicator');
@@ -120,21 +119,17 @@
     const toggleEditBtn = document.getElementById('toggleEditBtn');
     const mainGrid = document.getElementById('mainGrid');
 
-    function getCurrentDataset() {
-      return currentLayout === '6x4' ? data6x4 : data4x3;
-    }
-
     function saveCurrentData() {
       if (currentLayout === '6x4') {
         localStorage.setItem('aac_pages_data_v4', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_pages_data_4x3', JSON.stringify(data4x3));
+        localStorage.setItem('aac_pages_data_3x4', JSON.stringify(data3x4));
       }
       localStorage.setItem('aac_current_input', currentInput);
       localStorage.setItem('aac_layout_mode', currentLayout);
     }
 
-    // 瀏覽器原生語音朗讀
+    // Web Speech API 語音朗讀
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -177,27 +172,46 @@
       renderBoard();
     }
 
-    // 渲染主畫面
     function renderBoard() {
       pageIndicator.textContent = `第 ${currentPage} / ${TOTAL_PAGES} 頁`;
-      layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為 4x3 版' : '切換為 6x4 版';
+      layoutSwitchBtn.textContent = currentLayout === '6x4' ? '切換為 3x4 版' : '切換為 6x4 版';
       mainGrid.innerHTML = '';
 
       if (currentLayout === '6x4') {
         render6x4Layout();
       } else {
-        render4x3Layout();
+        render3x4Layout();
       }
     }
 
-    // 建立 6x4 版面（包含刪除單字鍵）
+    // 建立第 1 列（前 3 格合併為輸入顯示區，第 4 格為朗讀按鈕，大小與下方按鈕完全相同）
+    function appendDisplayRow(container) {
+      const dispArea = document.createElement('div');
+      dispArea.className = 'col-span-3 border-[3px] border-black rounded-2xl px-3 sm:px-5 flex items-center bg-white overflow-hidden';
+      
+      const dispText = document.createElement('div');
+      dispText.id = 'displayArea';
+      dispText.title = '點擊朗讀整句';
+      dispText.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
+      dispArea.appendChild(dispText);
+
+      const speakBtn = document.createElement('button');
+      speakBtn.className = 'border-[3px] border-black rounded-2xl flex flex-col items-center justify-center font-black active:bg-black active:text-white transition-all text-2xl sm:text-4xl bg-white';
+      speakBtn.innerHTML = '<span>🔊</span><span class="text-xs sm:text-lg font-bold mt-0.5">朗讀</span>';
+      speakBtn.title = '朗讀整句';
+      speakBtn.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
+
+      container.appendChild(dispArea);
+      container.appendChild(speakBtn);
+    }
+
+    // 渲染 6x4 版面
     function render6x4Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-4 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full min-h-0';
 
-      // 第 1 列：輸出框
-      const row1 = createDisplayRow();
-      container.appendChild(row1);
+      // 第 1 列：3 格輸入框 + 1 格標準朗讀按鈕
+      appendDisplayRow(container);
 
       // 第 2 列：上一頁、刪除單字、刪除整句、下一頁
       const prevBtn = createNavBtn('◀', '上一頁');
@@ -223,7 +237,7 @@
       // 第 3~6 列：4x4 共 16 格
       const gridItems = document.createElement('div');
       gridItems.className = 'col-span-4 row-span-4 grid grid-cols-4 grid-rows-4 gap-1.5 sm:gap-2.5 min-h-0';
-      populateWordButtons(gridItems, data6x4[currentPage] || Array(16).fill(''), data6x4);
+      populateWordButtons(gridItems, data6x4[currentPage] || Array(16).fill(''), data6x4, false);
       container.appendChild(gridItems);
 
       mainGrid.appendChild(container);
@@ -231,16 +245,15 @@
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
-    // 建立 4x3 版面（去除刪除單字鍵，保留上一頁、刪除整句、切換編輯、下一頁）
-    function render4x3Layout() {
+    // 渲染 3x4 版面（無刪除單字）
+    function render3x4Layout() {
       const container = document.createElement('div');
       container.className = 'grid grid-cols-4 grid-rows-3 gap-2 sm:gap-3 h-full w-full min-h-0';
 
-      // 第 1 列：輸出框
-      const row1 = createDisplayRow();
-      container.appendChild(row1);
+      // 第 1 列：3 格輸入框 + 1 格標準朗讀按鈕
+      appendDisplayRow(container);
 
-      // 第 2 列：上一頁、刪除整句（無刪除單字）、編輯切換、下一頁
+      // 第 2 列：上一頁、刪除整句（跨 2 格）、下一頁
       const prevBtn = createNavBtn('◀', '上一頁');
       const clearBtn = createActionBtn('🗑', '刪除整句', () => {
         if (currentInput.length > 0) {
@@ -248,20 +261,17 @@
           updateDisplayElement(document.getElementById('displayArea'));
         }
       });
-      const quickEditBtn = createActionBtn(isEditMode ? '✅' : '✏️', isEditMode ? '完成編輯' : '編輯按鈕', () => {
-        setEditMode(!isEditMode);
-      });
+      clearBtn.className += ' col-span-2';
       const nextBtn = createNavBtn('▶', '下一頁');
 
       container.appendChild(prevBtn);
       container.appendChild(clearBtn);
-      container.appendChild(quickEditBtn);
       container.appendChild(nextBtn);
 
-      // 第 3 列：單排 4 格特大按鈕
+      // 第 3 列：4 顆特大號字詞方格
       const gridItems = document.createElement('div');
       gridItems.className = 'col-span-4 row-span-1 grid grid-cols-4 grid-rows-1 gap-2 sm:gap-3 min-h-0';
-      populateWordButtons(gridItems, data4x3[currentPage] || Array(4).fill(''), data4x3, true);
+      populateWordButtons(gridItems, data3x4[currentPage] || Array(4).fill(''), data3x4, true);
       container.appendChild(gridItems);
 
       mainGrid.appendChild(container);
@@ -269,27 +279,6 @@
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
-    // 建立輸出列
-    function createDisplayRow() {
-      const row = document.createElement('div');
-      row.className = 'col-span-4 row-span-1 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-between bg-white overflow-hidden gap-2';
-
-      const disp = document.createElement('div');
-      disp.id = 'displayArea';
-      disp.title = '點擊朗讀整句';
-      disp.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
-
-      const speakBtn = document.createElement('button');
-      speakBtn.className = 'border-[3px] border-black rounded-2xl px-3 sm:px-6 py-2 sm:py-3.5 bg-white font-black text-xl sm:text-3xl flex items-center gap-1.5 active:bg-black active:text-white transition-all flex-shrink-0';
-      speakBtn.innerHTML = '<span>🔊</span><span class="text-sm sm:text-2xl">朗讀</span>';
-      speakBtn.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
-
-      row.appendChild(disp);
-      row.appendChild(speakBtn);
-      return row;
-    }
-
-    // 建立通用功能控制按鍵
     function createActionBtn(icon, label, onClick) {
       const btn = document.createElement('button');
       btn.className = 'border-[3px] border-black rounded-2xl flex flex-col items-center justify-center font-black active:bg-black active:text-white transition-all text-2xl sm:text-4xl';
@@ -305,7 +294,6 @@
       return btn;
     }
 
-    // 產生字詞按鈕
     function populateWordButtons(container, items, targetDataset, isLargeMode = false) {
       items.forEach((text, index) => {
         const btn = document.createElement('button');
@@ -318,7 +306,7 @@
 
         if (isLargeMode) {
           textSpan.className = textLen > 4 
-            ? 'text-xl sm:text-3xl md:text-4xl font-black leading-tight text-center break-words max-h-full overflow-hidden'
+            ? 'text-xl sm:text-3xl md:text-5xl font-black leading-tight text-center break-words max-h-full overflow-hidden'
             : 'text-3xl sm:text-5xl md:text-6xl font-black leading-tight text-center break-words max-h-full overflow-hidden';
         } else {
           textSpan.className = textLen > 4 
@@ -349,7 +337,6 @@
       });
     }
 
-    // 雙鍵同時按下解鎖邏輯
     function bindSimultaneousPress(prevBtn, nextBtn) {
       let prevPressed = false;
       let nextPressed = false;
@@ -381,14 +368,12 @@
       nextBtn.addEventListener('pointerleave', () => { nextPressed = false; });
     }
 
-    // 版面切換按鈕事件
     layoutSwitchBtn.addEventListener('click', () => {
-      currentLayout = (currentLayout === '6x4') ? '4x3' : '6x4';
+      currentLayout = (currentLayout === '6x4') ? '3x4' : '6x4';
       saveCurrentData();
       renderBoard();
     });
 
-    // 電腦端連點兩次切換編輯
     let lastClickTime = 0;
     let clickTimeout = null;
 
@@ -412,7 +397,6 @@
       }
     });
 
-    // 初始渲染
     renderBoard();
   </script>
 </body>
