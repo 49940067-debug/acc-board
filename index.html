@@ -39,12 +39,17 @@
     <!-- 6x4 核心方格佈局 -->
     <div class="grid grid-cols-4 grid-rows-6 gap-1.5 sm:gap-2.5 flex-1 w-full min-h-0">
       
-      <!-- 第一排：合併為跨 4 格的大型輸出區 (Row 1, Col 1~4) -->
-      <div class="col-span-4 row-span-1 border-[3px] border-black rounded-2xl px-3 sm:px-5 flex items-center justify-between bg-white overflow-hidden">
-        <div id="displayArea" class="text-4xl sm:text-6xl md:text-7xl font-black tracking-wide overflow-x-auto whitespace-nowrap scrollbar-none flex-1 text-black">
+      <!-- 第一排：合併為跨 4 格的大型輸出區，右側附帶「朗讀整句」快捷鍵 (Row 1, Col 1~4) -->
+      <div class="col-span-4 row-span-1 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-between bg-white overflow-hidden gap-2">
+        <div id="displayArea" class="text-3xl sm:text-5xl md:text-6xl font-black tracking-wide overflow-x-auto whitespace-nowrap scrollbar-none flex-1 text-black cursor-pointer" title="點擊朗讀整句">
           <!-- 動態輸入文字 -->
         </div>
-        <div class="w-3 h-9 sm:h-14 bg-black animate-pulse ml-2 flex-shrink-0"></div>
+        
+        <!-- 朗讀整句專用按鈕 -->
+        <button id="speakAllBtn" class="border-[2.5px] border-black rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-white font-black text-base sm:text-2xl flex items-center gap-1 active:bg-black active:text-white transition-all flex-shrink-0" title="朗讀整句">
+          <span>🔊</span>
+          <span class="text-xs sm:text-lg">朗讀</span>
+        </button>
       </div>
 
       <!-- 第二排：功能控制鍵 (Row 2, Col 1~4) -->
@@ -57,4 +62,86 @@
       <!-- 刪除單字 -->
       <button id="delCharBtn" class="border-[3px] border-black rounded-2xl flex flex-col items-center justify-center font-black active:bg-black active:text-white transition-all text-2xl sm:text-4xl">
         <span>⌫</span>
-        <span class
+        <span class="text-sm sm:text-xl font-bold mt-0.5">刪除單字</span>
+      </button>
+
+      <!-- 刪除整句 -->
+      <button id="clearBtn" class="border-[3px] border-black rounded-2xl flex flex-col items-center justify-center font-black active:bg-black active:text-white transition-all text-2xl sm:text-4xl">
+        <span>🗑</span>
+        <span class="text-sm sm:text-xl font-bold mt-0.5">刪除整句</span>
+      </button>
+
+      <!-- 下一頁 -->
+      <button id="nextBtn" class="border-[3px] border-black rounded-2xl flex flex-col items-center justify-center font-black active:bg-black active:text-white transition-all text-2xl sm:text-4xl">
+        <span>▶</span>
+        <span class="text-sm sm:text-xl font-bold mt-0.5">下一頁</span>
+      </button>
+
+      <!-- 第三排至第六排：4x4 共 16 格內容輸入鍵 (Row 3~6, Col 1~4) -->
+      <div id="gridContainer" class="col-span-4 row-span-4 grid grid-cols-4 grid-rows-4 gap-1.5 sm:gap-2.5 min-h-0">
+        <!-- 16 個按鈕由 JavaScript 動態生成渲染 -->
+      </div>
+
+    </div>
+
+    <!-- 底部操作提示 -->
+    <div class="text-center text-xs sm:text-base font-bold text-gray-700 flex-shrink-0">
+      提示：點擊「🔊 朗讀」或點擊輸入框可朗讀整句；按鍵點擊時亦會自動朗讀單詞。
+    </div>
+
+  </div>
+
+  <script>
+    const DEFAULT_PAGES = {
+      1: Array(16).fill(''),
+      2: Array(16).fill(''),
+      3: [
+        '我想', '要', '不要', '好',
+        '要吃', '要喝', '去廁所', '痛',
+        '累', '舒服', '不舒服', '高興',
+        '生氣', '請幫忙', '謝謝', '等一下'
+      ],
+      4: Array(16).fill(''),
+      5: [
+        '早安', '晚安', '是', '不是',
+        '請', '對不起', '沒關係', '在哪裡',
+        '什麼', '誰', '多少', '這裡',
+        '那裡', '現在', '等下', '回家'
+      ],
+      6: Array(16).fill(''),
+      7: Array(16).fill('')
+    };
+
+    const TOTAL_PAGES = 7;
+    let currentPage = 4;
+    let isEditMode = false;
+
+    let pagesData = JSON.parse(localStorage.getItem('aac_pages_data')) || DEFAULT_PAGES;
+    let currentInput = localStorage.getItem('aac_current_input') || '';
+
+    const displayArea = document.getElementById('displayArea');
+    const speakAllBtn = document.getElementById('speakAllBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const modeBadge = document.getElementById('modeBadge');
+    const gridContainer = document.getElementById('gridContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const delCharBtn = document.getElementById('delCharBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const toggleEditBtn = document.getElementById('toggleEditBtn');
+
+    // 核心語音合成朗讀函數
+    function speakText(text) {
+      if (!text || !('speechSynthesis' in window)) return;
+      
+      // 停止先前尚未播完的語音，避免重疊
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW'; // 設定台灣中文發音
+      utterance.rate = 0.95;    // 語速略為放緩，更易於溝通聽辨
+      utterance.pitch = 1.0;
+
+      // 優先尋找繁體中文 (zh-TW) 語音包
+      const voices = window.speechSynthesis.getVoices();
+      const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang.includes('
