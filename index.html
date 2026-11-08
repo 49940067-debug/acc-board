@@ -361,7 +361,7 @@
 
       <!-- 底部操作提示 -->
       <div class="footer-hint">
-        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁切換編輯｜連點 3 次上方「輸入模式」或三指按住左右與刪除開啟設定
+        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁（或連點右上編輯按鈕）切換編輯｜在編輯模式下連點「刪除整句」開啟後台
       </div>
 
       <!-- 隱藏式管理者後台面板 -->
@@ -627,10 +627,7 @@
         }
       });
       const clearBtn = createActionBtn('🗑', '刪除整句', () => {
-        if (currentInput.length > 0) {
-          currentInput = '';
-          updateDisplayElement(document.getElementById('displayArea'));
-        }
+        handleClearBtnClick();
       });
       const nextBtn = createNavBtn('▶', '下一頁');
 
@@ -645,7 +642,7 @@
       container.appendChild(gridItems);
 
       mainGrid.appendChild(container);
-      bindControlGestures(prevBtn, delCharBtn, clearBtn, nextBtn);
+      bindControlGestures(prevBtn, nextBtn);
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
@@ -668,10 +665,7 @@
 
       const prevBtn = createNavBtn('◀', '上一頁');
       const clearBtn = createActionBtn('🗑', '刪除整句', () => {
-        if (currentInput.length > 0) {
-          currentInput = '';
-          updateDisplayElement(document.getElementById('displayArea'));
-        }
+        handleClearBtnClick();
       });
       const nextBtn = createNavBtn('▶', '下一頁');
 
@@ -685,7 +679,7 @@
       container.appendChild(gridItems);
 
       mainGrid.appendChild(container);
-      bindControlGestures(prevBtn, null, clearBtn, nextBtn);
+      bindControlGestures(prevBtn, nextBtn);
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
@@ -736,35 +730,46 @@
       });
     }
 
-    // 手勢與按鈕監聽 (三鍵開啟管理後台、雙鍵開啟編輯)
-    let isPrevActive = false;
-    let isNextActive = false;
-    let isDeleteActive = false;
-    let gestureLockTimer = null;
+    // 編輯模式下連點「刪除整句」觸發後台
+    let clearClickCount = 0;
+    let clearClickTimer = null;
 
-    function checkAdminCombo() {
-      if (isPrevActive && isNextActive && isDeleteActive) {
-        openAdminPanel();
-        isPrevActive = false;
-        isNextActive = false;
-        isDeleteActive = false;
-        return true;
+    function handleClearBtnClick() {
+      if (isEditMode) {
+        clearClickCount++;
+        clearTimeout(clearClickTimer);
+        if (clearClickCount >= 2) {
+          clearClickCount = 0;
+          openAdminPanel();
+          return;
+        } else {
+          clearClickTimer = setTimeout(() => {
+            clearClickCount = 0;
+          }, 800);
+        }
       }
-      return false;
+
+      // 一般輸入清除動作
+      if (currentInput.length > 0) {
+        currentInput = '';
+        updateDisplayElement(document.getElementById('displayArea'));
+      }
     }
 
-    function bindControlGestures(prevBtn, delCharBtn, clearBtn, nextBtn) {
+    // 手勢與翻頁監聽 (雙鍵切換編輯)
+    let isPrevActive = false;
+    let isNextActive = false;
+
+    function bindControlGestures(prevBtn, nextBtn) {
       // 上一頁按鈕
       prevBtn.addEventListener('pointerdown', (e) => {
         isPrevActive = true;
-        if (!checkAdminCombo()) {
-          if (isNextActive && !isDeleteActive) {
-            setEditMode(!isEditMode);
-          }
+        if (isNextActive) {
+          setEditMode(!isEditMode);
         }
       });
       prevBtn.addEventListener('pointerup', (e) => {
-        if (isPrevActive && !isNextActive && !isDeleteActive) {
+        if (isPrevActive && !isNextActive) {
           if (currentPage > 1) { currentPage--; renderBoard(); }
         }
         isPrevActive = false;
@@ -775,47 +780,19 @@
       // 下一頁按鈕
       nextBtn.addEventListener('pointerdown', (e) => {
         isNextActive = true;
-        if (!checkAdminCombo()) {
-          if (isPrevActive && !isDeleteActive) {
-            setEditMode(!isEditMode);
-          }
+        if (isPrevActive) {
+          setEditMode(!isEditMode);
         }
       });
       nextBtn.addEventListener('pointerup', (e) => {
         const total = getTotalPages();
-        if (isNextActive && !isPrevActive && !isDeleteActive) {
+        if (isNextActive && !isPrevActive) {
           if (currentPage < total) { currentPage++; renderBoard(); }
         }
         isNextActive = false;
       });
       nextBtn.addEventListener('pointerleave', () => { isNextActive = false; });
       nextBtn.addEventListener('pointercancel', () => { isNextActive = false; });
-
-      // 刪除按鍵（刪除整句）
-      if (clearBtn) {
-        clearBtn.addEventListener('pointerdown', (e) => {
-          isDeleteActive = true;
-          checkAdminCombo();
-        });
-        clearBtn.addEventListener('pointerup', () => {
-          setTimeout(() => { isDeleteActive = false; }, 100);
-        });
-        clearBtn.addEventListener('pointerleave', () => { isDeleteActive = false; });
-        clearBtn.addEventListener('pointercancel', () => { isDeleteActive = false; });
-      }
-
-      // 刪除按鍵（刪除單字，若存在）
-      if (delCharBtn) {
-        delCharBtn.addEventListener('pointerdown', (e) => {
-          isDeleteActive = true;
-          checkAdminCombo();
-        });
-        delCharBtn.addEventListener('pointerup', () => {
-          setTimeout(() => { isDeleteActive = false; }, 100);
-        });
-        delCharBtn.addEventListener('pointerleave', () => { isDeleteActive = false; });
-        delCharBtn.addEventListener('pointercancel', () => { isDeleteActive = false; });
-      }
     }
 
     layoutSwitchBtn.addEventListener('click', () => {
