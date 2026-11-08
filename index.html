@@ -849,7 +849,7 @@
       }
     });
 
-    // 註冊 PWA 離線 Service Worker
+    // 註冊 PWA 離線 Service Worker（包含安全協定環境檢查）
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
       window.addEventListener('load', () => {
         try {
