@@ -16,7 +16,10 @@
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23000'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='%23fff'>🗣️</text></svg>">
 
   <style>
-    /* 基礎重置與無障礙觸控防選取 */
+    :root {
+      --aac-font-scale: 1.0;
+    }
+
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -32,12 +35,11 @@
       background-color: #f9fafb;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    input, textarea {
+    input, textarea, select {
       -webkit-user-select: auto;
       user-select: auto;
     }
 
-    /* 外層滿版容器（保留安全區域） */
     .app-container {
       width: 100%;
       height: 100%;
@@ -59,9 +61,9 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      position: relative;
     }
 
-    /* 頂部狀態列（復原為原始比例尺寸） */
     .header-bar {
       display: flex;
       align-items: center;
@@ -76,14 +78,13 @@
       align-items: center;
       gap: 8px;
     }
-
-    /* 頂部按鈕復原為原始大小 */
     .pill-badge {
       padding: 2px 10px;
       border: 2.5px solid #000000;
       border-radius: 9999px;
       background: #ffffff;
       color: #000000;
+      cursor: pointer;
     }
     .btn-switch {
       padding: 2px 10px;
@@ -103,14 +104,12 @@
       border: none;
     }
 
-    /* 主網格容器 */
     .grid-container {
       flex: 1;
       width: 100%;
       min-height: 0;
     }
 
-    /* 四乘四版面（4 欄 × 6 列） */
     .layout-6x4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -120,7 +119,6 @@
       width: 100%;
     }
 
-    /* 九宮格版面（3 欄 × 5 列） */
     .layout-5x3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -130,14 +128,12 @@
       width: 100%;
     }
 
-    /* 欄位跨距 */
     .col-span-2 { grid-column: span 2; }
     .col-span-3 { grid-column: span 3; }
     .col-span-4 { grid-column: span 4; }
     .row-span-3 { grid-row: span 3; }
     .row-span-4 { grid-row: span 4; }
 
-    /* 輸出顯示欄 */
     .display-box {
       border: 3px solid #000000;
       border-radius: 16px;
@@ -148,7 +144,7 @@
       overflow: hidden;
     }
     .display-text {
-      font-size: 2.2rem;
+      font-size: calc(2.2rem * var(--aac-font-scale));
       font-weight: 900;
       letter-spacing: 0.05em;
       white-space: nowrap;
@@ -161,7 +157,6 @@
       color: #d1d5db;
     }
 
-    /* 通用操作按鈕 */
     .aac-btn {
       border: 3px solid #000000;
       border-radius: 16px;
@@ -182,16 +177,15 @@
       transform: scale(0.98);
     }
     .btn-icon {
-      font-size: 1.8rem;
+      font-size: calc(1.8rem * var(--aac-font-scale));
       line-height: 1;
     }
     .btn-label {
-      font-size: 0.85rem;
+      font-size: calc(0.85rem * var(--aac-font-scale));
       font-weight: bold;
       margin-top: 2px;
     }
 
-    /* 詞彙按鈕 */
     .word-btn {
       border: 3px solid #000000;
       border-radius: 16px;
@@ -216,21 +210,20 @@
       background-color: #fefce8;
     }
     .word-text-large {
-      font-size: 2.1rem;
+      font-size: calc(2.1rem * var(--aac-font-scale));
       font-weight: 900;
       line-height: 1.15;
       text-align: center;
       word-break: break-all;
     }
     .word-text-small {
-      font-size: 1.25rem;
+      font-size: calc(1.25rem * var(--aac-font-scale));
       font-weight: 900;
       line-height: 1.15;
       text-align: center;
       word-break: break-all;
     }
 
-    /* 詞彙子網格 */
     .words-grid-4x4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -248,7 +241,6 @@
       width: 100%;
     }
 
-    /* 底部操作提示 */
     .footer-hint {
       text-align: center;
       font-size: 11px;
@@ -257,12 +249,90 @@
       flex-shrink: 0;
     }
 
+    /* 管理設定後台面板彈窗 */
+    .admin-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .admin-card {
+      background: #ffffff;
+      border: 4px solid #000000;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .admin-card h2 {
+      font-size: 1.4rem;
+      font-weight: 900;
+      border-bottom: 3px solid #000;
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .admin-row label {
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .admin-row input, .admin-row select {
+      border: 2.5px solid #000000;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #fff;
+    }
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .btn-save {
+      flex: 1;
+      background: #000000;
+      color: #ffffff;
+      border: 2.5px solid #000000;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn-close {
+      flex: 1;
+      background: #ffffff;
+      color: #000000;
+      border: 2.5px solid #000000;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
     @media (min-width: 640px) {
-      .display-text { font-size: 3.5rem; }
-      .btn-icon { font-size: 2.2rem; }
-      .btn-label { font-size: 1.1rem; }
-      .word-text-large { font-size: 2.8rem; }
-      .word-text-small { font-size: 1.6rem; }
+      .display-text { font-size: calc(3.5rem * var(--aac-font-scale)); }
+      .btn-icon { font-size: calc(2.2rem * var(--aac-font-scale)); }
+      .btn-label { font-size: calc(1.1rem * var(--aac-font-scale)); }
+      .word-text-large { font-size: calc(2.8rem * var(--aac-font-scale)); }
+      .word-text-small { font-size: calc(1.6rem * var(--aac-font-scale)); }
       .header-bar { font-size: 16px; }
       .board-card { gap: 8px; padding: 10px; }
       .layout-6x4, .layout-5x3, .words-grid-4x4, .words-grid-3x3 { gap: 8px; }
@@ -274,14 +344,14 @@
   <div class="app-container">
     <div class="board-card">
       
-      <!-- 頂部資訊與切換列（已復原原始順序：頁碼在左、規格切換按鈕在其右） -->
+      <!-- 頂部資訊與切換列 -->
       <div class="header-bar">
         <div class="badge-group">
           <div id="pageIndicator" class="pill-badge">第 8 / 15 頁</div>
           <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
         </div>
         <div class="action-group">
-          <div id="modeBadge" class="pill-badge">輸入模式</div>
+          <div id="modeBadge" class="pill-badge" title="連點 3 次打開管理後台">輸入模式</div>
           <button id="toggleEditBtn" class="btn-edit-toggle">連點切換編輯</button>
         </div>
       </div>
@@ -291,125 +361,110 @@
 
       <!-- 底部操作提示 -->
       <div class="footer-hint">
-        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁切換編輯模式
+        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁切換編輯｜同時按住左右與刪除開啟設定後台
+      </div>
+
+      <!-- 隱藏式管理者後台面板 -->
+      <div id="adminOverlay" class="admin-overlay">
+        <div class="admin-card">
+          <h2>⚙️ 溝通板系統設定 <span style="font-size: 12px; font-weight: normal; color: #666;">Admin</span></h2>
+          
+          <div class="admin-row">
+            <label>九宮格版總頁數：</label>
+            <input type="number" id="inputPages5x3" min="3" max="50" step="1" value="15">
+          </div>
+
+          <div class="admin-row">
+            <label>四乘四版總頁數：</label>
+            <input type="number" id="inputPages6x4" min="3" max="50" step="1" value="11">
+          </div>
+
+          <div class="admin-row">
+            <label>全域字體大小縮放比例：</label>
+            <select id="selectFontScale">
+              <option value="0.85">小 (85%)</option>
+              <option value="1.0" selected>標準 (100%)</option>
+              <option value="1.15">大 (115%)</option>
+              <option value="1.3">特大 (130%)</option>
+              <option value="1.45">超大 (145%)</option>
+            </select>
+          </div>
+
+          <div class="admin-actions">
+            <button id="btnSaveAdmin" class="btn-save">儲存設定</button>
+            <button id="btnCloseAdmin" class="btn-close">取消返回</button>
+          </div>
+        </div>
       </div>
 
     </div>
   </div>
 
   <script>
-    // 四乘四版：11 頁詞庫（啟動頁第 6 頁）
+    // 預設四乘四版（11 頁詞庫，第 6 頁空白中樞）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
-      2: Array(16).fill(''),
-      3: [
-        '頭痛', '肚子痛', '胸口痛', '腳痛',
-        '手痛', '背痛', '很癢', '頭暈',
-        '想吐', '抽筋', '呼吸不順', '發燒',
-        '生氣', '難過', '害怕', '安心'
-      ],
-      4: [
-        '要吃', '要喝', '去廁所', '要洗澡',
-        '想睡覺', '要起床', '坐下', '躺下',
-        '口渴', '肚子餓', '吃藥', '換衣服',
-        '太冷了', '太熱了', '這裡痛', '想回家'
-      ],
-      5: [
-        '我想', '要', '不要', '好',
-        '不好', '請幫我', '謝謝', '對不起',
-        '痛', '累', '舒服', '不舒服',
-        '冷', '熱', '等一下', '請慢點'
-      ],
+      2: ['擦嘴巴', '換姿勢', '蓋被子', '拿枕頭', '要吸痰', '拍拍背', '按摩', '剪指甲', '擦身體', '漱口', '喝溫水', '喝果汁', '吃稀飯', '吃水果', '想吃肉', '要喝湯'],
+      3: ['頭痛', '肚子痛', '胸口痛', '腳痛', '手痛', '背痛', '很癢', '頭暈', '想吐', '抽筋', '呼吸不順', '發燒', '生氣', '難過', '害怕', '安心'],
+      4: ['要吃', '要喝', '去廁所', '要洗澡', '想睡覺', '要起床', '坐下', '躺下', '口渴', '肚子餓', '吃藥', '換衣服', '太冷了', '太熱了', '這裡痛', '想回家'],
+      5: ['我想', '要', '不要', '好', '不好', '請幫我', '謝謝', '對不起', '痛', '累', '舒服', '不舒服', '冷', '熱', '等一下', '請慢點'],
       6: Array(16).fill(''),
-      7: [
-        '是', '不是', '早安', '晚安',
-        '請', '沒關係', '對', '不對',
-        '在哪裡', '什麼', '誰', '這裡',
-        '那裡', '現在', '等下', '沒問題'
-      ],
-      8: [
-        '請開燈', '請關燈', '太吵了', '請小聲點',
-        '我想看電視', '聽音樂', '我想休息', '請扶我',
-        '請陪我', '不要走', '想聊聊天', '出門',
-        '刷牙', '洗臉', '吃飽了', '不知道'
-      ],
-      9: [
-        '很高興', '辛苦了', '很棒', '真好吃',
-        '很喜歡', '不喜歡', '不用了', '我同意',
-        '沒事的', '慢慢來', '明天見', '祝好運',
-        '一路平安', '多保重', '再見', '再說一次'
-      ],
-      10: Array(16).fill(''),
+      7: ['是', '不是', '早安', '晚安', '請', '沒關係', '對', '不對', '在哪裡', '什麼', '誰', '這裡', '那裡', '現在', '等下', '沒問題'],
+      8: ['請開燈', '請關燈', '太吵了', '請小聲點', '我想看電視', '聽音樂', '我想休息', '請扶我', '請陪我', '不要走', '想聊聊天', '出門', '刷牙', '洗臉', '吃飽了', '不知道'],
+      9: ['很高興', '辛苦了', '很棒', '真好吃', '很喜歡', '不喜歡', '不用了', '我同意', '沒事的', '慢慢來', '明天見', '祝好運', '一路平安', '多保重', '再見', '再說一次'],
+      10: ['看手機', '開窗戶', '關窗戶', '吹電扇', '開冷氣', '關冷氣', '看外面', '想睡了', '不要吵', '不要動', '等等我', '再想想', '都可以', '沒意見', '我明白', '聽不懂'],
       11: Array(16).fill('')
     };
 
-    // 九宮格版：15 頁詞庫（啟動頁第 8 頁）
+    // 預設九宮格版（15 頁詞庫，第 8 頁空白中樞）
     const DEFAULT_5X3 = {
       1: Array(9).fill(''),
-      2: Array(9).fill(''),
-      3: [
-        '擦嘴巴', '換姿勢', '蓋被子',
-        '拿枕頭', '要吸痰', '拍拍背',
-        '要洗澡', '很酸', '抽筋'
-      ],
-      4: [
-        '生氣', '難過', '害怕',
-        '安心', '很煩', '緊張',
-        '放輕鬆', '好多了', '無聊'
-      ],
-      5: [
-        '頭痛', '肚子痛', '想吐',
-        '很癢', '頭暈', '發燒',
-        '呼吸不順', '胸口痛', '很脹'
-      ],
-      6: [
-        '要吃', '要喝', '去廁所',
-        '想睡覺', '要坐下', '要躺下',
-        '吃藥', '太冷了', '太熱了'
-      ],
-      7: [
-        '我想', '要', '不要',
-        '好', '請幫我', '謝謝',
-        '痛', '累', '不舒服'
-      ],
+      2: ['吃白飯', '喝溫水', '吃稀飯', '喝果汁', '吃水果', '想吃肉', '要喝湯', '吃飽了', '還想吃'],
+      3: ['擦嘴巴', '換姿勢', '蓋被子', '拿枕頭', '要吸痰', '拍拍背', '要洗澡', '很酸', '抽筋'],
+      4: ['生氣', '難過', '害怕', '安心', '很煩', '緊張', '放輕鬆', '好多了', '無聊'],
+      5: ['頭痛', '肚子痛', '想吐', '很癢', '頭暈', '發燒', '呼吸不順', '胸口痛', '很脹'],
+      6: ['要吃', '要喝', '去廁所', '想睡覺', '要坐下', '要躺下', '吃藥', '太冷了', '太熱了'],
+      7: ['我想', '要', '不要', '好', '請幫我', '謝謝', '痛', '累', '不舒服'],
       8: Array(9).fill(''),
-      9: [
-        '是', '不是', '早安',
-        '晚安', '請', '沒關係',
-        '對', '不知道', '等一下'
-      ],
-      10: [
-        '請開燈', '請關燈', '太吵了',
-        '我想休息', '請扶我', '不要走',
-        '想看電視', '想喝水', '沒問題'
-      ],
-      11: [
-        '很高興', '辛苦了', '很棒',
-        '真好吃', '很喜歡', '不用了',
-        '沒事的', '慢慢來', '再見'
-      ],
-      12: [
-        '在哪裡', '誰來了', '什麼時候',
-        '想出門', '回家', '換衣服',
-        '刷牙', '洗臉', '吃飽了'
-      ],
-      13: [
-        '聽音樂', '聊聊天', '看手機',
-        '多喝水', '請小聲', '請慢點',
-        '聽不清', '再說一次', '明天見'
-      ],
-      14: Array(9).fill(''),
+      9: ['是', '不是', '早安', '晚安', '請', '沒關係', '對', '不知道', '等一下'],
+      10: ['請開燈', '請關燈', '太吵了', '我想休息', '請扶我', '不要走', '想看電視', '想喝水', '沒問題'],
+      11: ['很高興', '辛苦了', '很棒', '真好吃', '很喜歡', '不用了', '沒事的', '慢慢來', '再見'],
+      12: ['在哪裡', '誰來了', '什麼時候', '想出門', '回家', '換衣服', '刷牙', '洗臉', '吃飽了'],
+      13: ['聽音樂', '聊聊天', '看手機', '多喝水', '請小聲', '請慢點', '聽不清', '再說一次', '明天見'],
+      14: ['我同意', '不同意', '都可以', '都可以啦', '再想想', '等等我', '我明白', '不知道', '沒意見'],
       15: Array(9).fill('')
     };
 
-    // 預設為九宮格 (5x3)，啟動頁為第 8 頁
-    let currentLayout = localStorage.getItem('aac_layout_mode_v18') || '5x3';
-    let currentPage = currentLayout === '5x3' ? 8 : 6;
+    // 讀取管理者設定或預設值
+    let adminConfig = JSON.parse(localStorage.getItem('aac_admin_config_v20')) || {
+      totalPages5x3: 15,
+      totalPages6x4: 11,
+      fontScale: 1.0
+    };
+
+    // 套用字體縮放變數
+    document.documentElement.style.setProperty('--aac-font-scale', adminConfig.fontScale || 1.0);
+
+    let currentLayout = localStorage.getItem('aac_layout_mode_v20') || '5x3';
+    let currentPage = currentLayout === '5x3' 
+      ? Math.ceil(adminConfig.totalPages5x3 / 2) 
+      : Math.ceil(adminConfig.totalPages6x4 / 2);
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v18')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v18')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v20')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v20')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
+
+    // 自動補齊設定頁數陣列
+    function ensurePagesCapacity() {
+      for (let i = 1; i <= adminConfig.totalPages6x4; i++) {
+        if (!data6x4[i]) data6x4[i] = Array(16).fill('');
+      }
+      for (let i = 1; i <= adminConfig.totalPages5x3; i++) {
+        if (!data5x3[i]) data5x3[i] = Array(9).fill('');
+      }
+    }
+    ensurePagesCapacity();
 
     const pageIndicator = document.getElementById('pageIndicator');
     const layoutSwitchBtn = document.getElementById('layoutSwitchBtn');
@@ -417,69 +472,58 @@
     const toggleEditBtn = document.getElementById('toggleEditBtn');
     const mainGrid = document.getElementById('mainGrid');
 
-    // ==========================================
-    // 螢幕常亮控制（Screen Wake Lock API）
-    // ==========================================
-    let wakeLock = null;
+    const adminOverlay = document.getElementById('adminOverlay');
+    const inputPages5x3 = document.getElementById('inputPages5x3');
+    const inputPages6x4 = document.getElementById('inputPages6x4');
+    const selectFontScale = document.getElementById('selectFontScale');
+    const btnSaveAdmin = document.getElementById('btnSaveAdmin');
+    const btnCloseAdmin = document.getElementById('btnCloseAdmin');
 
+    // 螢幕常亮控制 (Wake Lock)
+    let wakeLock = null;
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
           wakeLock = await navigator.wakeLock.request('screen');
-          wakeLock.addEventListener('release', () => {
-            wakeLock = null;
-          });
+          wakeLock.addEventListener('release', () => { wakeLock = null; });
         }
       } catch (err) {}
     }
-
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        requestWakeLock();
-      }
+      if (document.visibilityState === 'visible') requestWakeLock();
     });
-
     ['click', 'touchstart', 'pointerdown'].forEach((evt) => {
-      document.addEventListener(evt, () => {
-        if (!wakeLock) {
-          requestWakeLock();
-        }
-      }, { once: false });
+      document.addEventListener(evt, () => { if (!wakeLock) requestWakeLock(); }, { once: false });
     });
-
     requestWakeLock();
 
     function getTotalPages() {
-      return currentLayout === '5x3' ? 15 : 11;
+      return currentLayout === '5x3' ? adminConfig.totalPages5x3 : adminConfig.totalPages6x4;
     }
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v18', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v20', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v18', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v20', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v18', currentLayout);
+      localStorage.setItem('aac_layout_mode_v20', currentLayout);
+      localStorage.setItem('aac_admin_config_v20', JSON.stringify(adminConfig));
     }
 
-    // 瀏覽器原生離線語音合成
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
-
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'zh-TW';
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
-
       const voices = window.speechSynthesis.getVoices();
       const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang.includes('TW'));
       if (twVoice) utterance.voice = twVoice;
-
       window.speechSynthesis.speak(utterance);
     }
-
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     }
@@ -510,6 +554,40 @@
       }
       renderBoard();
     }
+
+    function openAdminPanel() {
+      inputPages5x3.value = adminConfig.totalPages5x3;
+      inputPages6x4.value = adminConfig.totalPages6x4;
+      selectFontScale.value = adminConfig.fontScale.toString();
+      adminOverlay.style.display = 'flex';
+    }
+
+    function closeAdminPanel() {
+      adminOverlay.style.display = 'none';
+    }
+
+    btnSaveAdmin.addEventListener('click', () => {
+      const p5 = parseInt(inputPages5x3.value, 10);
+      const p6 = parseInt(inputPages6x4.value, 10);
+      const fs = parseFloat(selectFontScale.value);
+
+      if (p5 >= 3 && p5 <= 50) adminConfig.totalPages5x3 = p5;
+      if (p6 >= 3 && p6 <= 50) adminConfig.totalPages6x4 = p6;
+      if (fs) {
+        adminConfig.fontScale = fs;
+        document.documentElement.style.setProperty('--aac-font-scale', fs);
+      }
+
+      ensurePagesCapacity();
+      const total = getTotalPages();
+      if (currentPage > total) currentPage = total;
+
+      saveCurrentData();
+      closeAdminPanel();
+      renderBoard();
+    });
+
+    btnCloseAdmin.addEventListener('click', closeAdminPanel);
 
     function renderBoard() {
       const total = getTotalPages();
@@ -567,7 +645,7 @@
       container.appendChild(gridItems);
 
       mainGrid.appendChild(container);
-      bindSimultaneousPress(prevBtn, nextBtn);
+      bindControlGestures(prevBtn, delCharBtn, clearBtn, nextBtn);
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
@@ -607,7 +685,7 @@
       container.appendChild(gridItems);
 
       mainGrid.appendChild(container);
-      bindSimultaneousPress(prevBtn, nextBtn);
+      bindControlGestures(prevBtn, null, clearBtn, nextBtn);
       updateDisplayElement(document.getElementById('displayArea'));
     }
 
@@ -634,12 +712,7 @@
         const textSpan = document.createElement('span');
         const textLen = (text || '').length;
 
-        if (isNineGrid) {
-          textSpan.className = textLen > 4 ? 'word-text-small' : 'word-text-large';
-        } else {
-          textSpan.className = textLen > 4 ? 'word-text-small' : 'word-text-large';
-        }
-
+        textSpan.className = textLen > 4 ? 'word-text-small' : 'word-text-large';
         textSpan.textContent = text || (isEditMode ? '＋' : '');
         btn.appendChild(textSpan);
 
@@ -663,64 +736,103 @@
       });
     }
 
-    function bindSimultaneousPress(prevBtn, nextBtn) {
-      let prevPressed = false;
-      let nextPressed = false;
+    // 手勢與按鈕監聽 (三鍵開啟管理後台、雙鍵開啟編輯)
+    function bindControlGestures(prevBtn, delCharBtn, clearBtn, nextBtn) {
+      let isPrevDown = false;
+      let isNextDown = false;
+      let isDeleteDown = false;
 
-      function check() {
-        if (prevPressed && nextPressed) {
+      function checkAdminTrigger() {
+        if (isPrevDown && isNextDown && isDeleteDown) {
+          openAdminPanel();
+          isPrevDown = false;
+          isNextDown = false;
+          isDeleteDown = false;
+          return true;
+        }
+        return false;
+      }
+
+      function checkEditTrigger() {
+        if (isPrevDown && isNextDown && !isDeleteDown) {
           setEditMode(!isEditMode);
-          prevPressed = false;
-          nextPressed = false;
+          isPrevDown = false;
+          isNextDown = false;
         }
       }
 
-      prevBtn.addEventListener('pointerdown', () => { 
-        prevPressed = true; 
-        check(); 
+      prevBtn.addEventListener('pointerdown', () => {
+        isPrevDown = true;
+        if (!checkAdminTrigger()) checkEditTrigger();
       });
       prevBtn.addEventListener('pointerup', () => {
-        if (prevPressed && !nextPressed) {
-          if (currentPage > 1) { 
-            currentPage--; 
-            renderBoard(); 
-          }
+        if (isPrevDown && !isNextDown && !isDeleteDown) {
+          if (currentPage > 1) { currentPage--; renderBoard(); }
         }
-        prevPressed = false;
+        isPrevDown = false;
       });
-      prevBtn.addEventListener('pointerleave', () => { prevPressed = false; });
+      prevBtn.addEventListener('pointerleave', () => { isPrevDown = false; });
 
-      nextBtn.addEventListener('pointerdown', () => { 
-        nextPressed = true; 
-        check(); 
+      nextBtn.addEventListener('pointerdown', () => {
+        isNextDown = true;
+        if (!checkAdminTrigger()) checkEditTrigger();
       });
       nextBtn.addEventListener('pointerup', () => {
         const total = getTotalPages();
-        if (nextPressed && !prevPressed) {
-          if (currentPage < total) { 
-            currentPage++; 
-            renderBoard(); 
-          }
+        if (isNextDown && !isPrevDown && !isDeleteDown) {
+          if (currentPage < total) { currentPage++; renderBoard(); }
         }
-        nextPressed = false;
+        isNextDown = false;
       });
-      nextBtn.addEventListener('pointerleave', () => { nextPressed = false; });
+      nextBtn.addEventListener('pointerleave', () => { isNextDown = false; });
+
+      if (clearBtn) {
+        clearBtn.addEventListener('pointerdown', () => {
+          isDeleteDown = true;
+          checkAdminTrigger();
+        });
+        clearBtn.addEventListener('pointerup', () => { isDeleteDown = false; });
+        clearBtn.addEventListener('pointerleave', () => { isDeleteDown = false; });
+      }
+
+      if (delCharBtn) {
+        delCharBtn.addEventListener('pointerdown', () => {
+          isDeleteDown = true;
+          checkAdminTrigger();
+        });
+        delCharBtn.addEventListener('pointerup', () => { isDeleteDown = false; });
+        delCharBtn.addEventListener('pointerleave', () => { isDeleteDown = false; });
+      }
     }
 
     layoutSwitchBtn.addEventListener('click', () => {
       currentLayout = (currentLayout === '5x3') ? '6x4' : '5x3';
-      currentPage = (currentLayout === '5x3') ? 8 : 6;
+      const total = getTotalPages();
+      currentPage = Math.ceil(total / 2);
       saveCurrentData();
       renderBoard();
     });
 
+    // 桌面連點 3 次模式徽章打開後台
+    let badgeClickCount = 0;
+    let badgeClickTimer = null;
+    modeBadge.addEventListener('click', () => {
+      badgeClickCount++;
+      clearTimeout(badgeClickTimer);
+      if (badgeClickCount >= 3) {
+        openAdminPanel();
+        badgeClickCount = 0;
+      } else {
+        badgeClickTimer = setTimeout(() => { badgeClickCount = 0; }, 800);
+      }
+    });
+
+    // 連點切換編輯模式
     let lastClickTime = 0;
     let clickTimeout = null;
-
     toggleEditBtn.addEventListener('click', () => {
       const now = new Date().getTime();
       const diff = now - lastClickTime;
-
       if (diff < 400 && diff > 0) {
         clearTimeout(clickTimeout);
         setEditMode(!isEditMode);
@@ -738,11 +850,18 @@
     });
 
     // 註冊 PWA 離線 Service Worker
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('PWA Service Worker 註冊成功:', reg.scope))
-          .catch((err) => console.error('PWA Service Worker 註冊失敗:', err));
+        try {
+          const swUrl = new URL('./sw.js', window.location.href);
+          if (swUrl.protocol === 'https:' || swUrl.protocol === 'http:') {
+            navigator.serviceWorker.register(swUrl.href)
+              .then((reg) => console.log('PWA Service Worker 註冊成功:', reg.scope))
+              .catch((err) => console.warn('PWA Service Worker 註冊略過或失敗:', err));
+          }
+        } catch (e) {
+          console.warn('非標準網頁環境，略過 Service Worker 註冊');
+        }
       });
     }
 
