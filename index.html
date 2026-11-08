@@ -40,6 +40,7 @@
       user-select: auto;
     }
 
+    /* 安全區域避讓（避免被 iPhone 聽筒/動態島或控制桿遮蔽） */
     .app-container {
       width: 100%;
       height: 100%;
@@ -64,6 +65,7 @@
       position: relative;
     }
 
+    /* 頂部資訊列：復原為標準比例尺寸與配置（頁碼在左、按鈕在右） */
     .header-bar {
       display: flex;
       align-items: center;
@@ -110,6 +112,7 @@
       min-height: 0;
     }
 
+    /* 四乘四版面網格 */
     .layout-6x4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -119,6 +122,7 @@
       width: 100%;
     }
 
+    /* 九宮格版面網格 */
     .layout-5x3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -134,6 +138,7 @@
     .row-span-3 { grid-row: span 3; }
     .row-span-4 { grid-row: span 4; }
 
+    /* 輸出顯示欄 */
     .display-box {
       border: 3px solid #000000;
       border-radius: 16px;
@@ -157,6 +162,7 @@
       color: #d1d5db;
     }
 
+    /* 操作按鈕 */
     .aac-btn {
       border: 3px solid #000000;
       border-radius: 16px;
@@ -186,6 +192,7 @@
       margin-top: 2px;
     }
 
+    /* 詞彙按鈕 */
     .word-btn {
       border: 3px solid #000000;
       border-radius: 16px;
@@ -249,84 +256,6 @@
       flex-shrink: 0;
     }
 
-    /* 管理設定後台面板彈窗 */
-    .admin-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      z-index: 999999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .admin-card {
-      background: #ffffff;
-      border: 4px solid #000000;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 480px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-    .admin-card h2 {
-      font-size: 1.4rem;
-      font-weight: 900;
-      border-bottom: 3px solid #000;
-      padding-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .admin-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .admin-row label {
-      font-weight: 800;
-      font-size: 14px;
-    }
-    .admin-row input, .admin-row select {
-      border: 2.5px solid #000000;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 16px;
-      font-weight: bold;
-      background: #fff;
-    }
-    .admin-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .btn-save {
-      flex: 1;
-      background: #000000;
-      color: #ffffff;
-      border: 2.5px solid #000000;
-      border-radius: 10px;
-      padding: 10px;
-      font-weight: 900;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .btn-close {
-      flex: 1;
-      background: #ffffff;
-      color: #000000;
-      border: 2.5px solid #000000;
-      border-radius: 10px;
-      padding: 10px;
-      font-weight: 900;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
     @media (min-width: 640px) {
       .display-text { font-size: calc(3.5rem * var(--aac-font-scale)); }
       .btn-icon { font-size: calc(2.2rem * var(--aac-font-scale)); }
@@ -362,7 +291,7 @@
 
       <!-- 底部操作提示 -->
       <div class="footer-hint">
-        提示：點擊「🔊 朗讀」唸出整句｜點右上角「切換編輯」｜編輯模式下上方可直接調整頁數與顯示比例
+        提示：點擊「🔊 朗讀」唸出整句｜點右上角「切換編輯」｜編輯模式下第 1 列可直接調整頁數與顯示比例
       </div>
 
     </div>
@@ -403,24 +332,52 @@
       15: Array(9).fill('')
     };
 
-    // 讀取管理者設定或預設值
-    let adminConfig = JSON.parse(localStorage.getItem('aac_admin_config_v20')) || {
-      totalPages5x3: 15,
-      totalPages6x4: 11,
-      fontScale: 1.0
-    };
+    // ==========================================================
+    // 本地資料自動向後相容繼承函式（保護編輯內容不被更新刷新）
+    // ==========================================================
+    function getStoredDataWithMigration(primaryKey, fallbackKeys, defaultData) {
+      const current = localStorage.getItem(primaryKey);
+      if (current) {
+        try { return JSON.parse(current); } catch(e) {}
+      }
+      for (const oldKey of fallbackKeys) {
+        const oldVal = localStorage.getItem(oldKey);
+        if (oldVal) {
+          try {
+            const parsed = JSON.parse(oldVal);
+            localStorage.setItem(primaryKey, oldVal);
+            return parsed;
+          } catch(e) {}
+        }
+      }
+      return defaultData;
+    }
 
-    // 套用字體縮放變數
+    let adminConfig = getStoredDataWithMigration(
+      'aac_admin_config_v21',
+      ['aac_admin_config_v20', 'aac_admin_config_v19'],
+      { totalPages5x3: 15, totalPages6x4: 11, fontScale: 1.0 }
+    );
+
+    // 套用全域字級縮放
     document.documentElement.style.setProperty('--aac-font-scale', adminConfig.fontScale || 1.0);
 
-    let currentLayout = localStorage.getItem('aac_layout_mode_v20') || '5x3';
+    let currentLayout = localStorage.getItem('aac_layout_mode_v21') || '5x3';
     let currentPage = currentLayout === '5x3' 
       ? Math.ceil(adminConfig.totalPages5x3 / 2) 
       : Math.ceil(adminConfig.totalPages6x4 / 2);
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v20')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v20')) || DEFAULT_5X3;
+    let data6x4 = getStoredDataWithMigration(
+      'aac_data_6x4_v21',
+      ['aac_data_6x4_v20', 'aac_data_6x4_v19', 'aac_data_6x4_v18'],
+      DEFAULT_6X4
+    );
+    let data5x3 = getStoredDataWithMigration(
+      'aac_data_5x3_v21',
+      ['aac_data_5x3_v20', 'aac_data_5x3_v19', 'aac_data_5x3_v18'],
+      DEFAULT_5X3
+    );
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     // 自動補齊設定頁數陣列
@@ -434,12 +391,31 @@
     }
     ensurePagesCapacity();
 
-    const boardContainer = document.getElementById('boardContainer');
     const pageIndicator = document.getElementById('pageIndicator');
     const layoutSwitchBtn = document.getElementById('layoutSwitchBtn');
     const modeBadge = document.getElementById('modeBadge');
     const toggleEditBtn = document.getElementById('toggleEditBtn');
     const mainGrid = document.getElementById('mainGrid');
+
+    // ==========================================
+    // 螢幕防休眠常亮鎖定（Screen Wake Lock API）
+    // ==========================================
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => { wakeLock = null; });
+        }
+      } catch (err) {}
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
+    });
+    ['click', 'touchstart', 'pointerdown'].forEach((evt) => {
+      document.addEventListener(evt, () => { if (!wakeLock) requestWakeLock(); }, { once: false });
+    });
+    requestWakeLock();
 
     function getTotalPages() {
       return currentLayout === '5x3' ? adminConfig.totalPages5x3 : adminConfig.totalPages6x4;
@@ -447,15 +423,16 @@
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v20', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v21', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v20', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v21', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v20', currentLayout);
-      localStorage.setItem('aac_admin_config_v20', JSON.stringify(adminConfig));
+      localStorage.setItem('aac_layout_mode_v21', currentLayout);
+      localStorage.setItem('aac_admin_config_v21', JSON.stringify(adminConfig));
     }
 
+    // 瀏覽器原生離線語音合成
     function speakText(text) {
       if (!text || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -512,7 +489,7 @@
       }
     }
 
-    // 渲染四乘四
+    // 渲染四乘四版面
     function render6x4Layout() {
       const container = document.createElement('div');
       container.className = 'layout-6x4';
@@ -520,13 +497,14 @@
       if (isEditMode) {
         // 編輯模式第一列：就地下拉選單（敘述文字放大 4 個字級約 24px）
         const editRow = document.createElement('div');
-        editRow.className = 'col-span-3 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-around bg-yellow-50 overflow-hidden';
+        editRow.className = 'col-span-3';
         editRow.style.border = '3px solid #000';
         editRow.style.borderRadius = '16px';
         editRow.style.background = '#fefce8';
         editRow.style.display = 'flex';
         editRow.style.alignItems = 'center';
         editRow.style.justifyContent = 'space-around';
+        editRow.style.padding = '0 12px';
 
         // 頁數設定
         const pageWrap = document.createElement('div');
@@ -536,7 +514,7 @@
 
         const pageLabel = document.createElement('span');
         pageLabel.textContent = '頁數:';
-        pageLabel.style.fontSize = '24px'; // 放大四個字級
+        pageLabel.style.fontSize = '24px';
         pageLabel.style.fontWeight = '900';
 
         const pageSelect = document.createElement('select');
@@ -564,7 +542,7 @@
 
         const scaleLabel = document.createElement('span');
         scaleLabel.textContent = '比例:';
-        scaleLabel.style.fontSize = '24px'; // 放大四個字級
+        scaleLabel.style.fontSize = '24px';
         scaleLabel.style.fontWeight = '900';
 
         const scaleSelect = document.createElement('select');
@@ -655,7 +633,7 @@
       if (!isEditMode) updateDisplayElement(document.getElementById('displayArea'));
     }
 
-    // 渲染九宮格
+    // 渲染九宮格版面
     function render5x3Layout() {
       const container = document.createElement('div');
       container.className = 'layout-5x3';
@@ -663,13 +641,14 @@
       if (isEditMode) {
         // 編輯模式第一列：就地下拉選單（敘述文字放大 4 個字級約 24px）
         const editRow = document.createElement('div');
-        editRow.className = 'col-span-2 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-around bg-yellow-50 overflow-hidden';
+        editRow.className = 'col-span-2';
         editRow.style.border = '3px solid #000';
         editRow.style.borderRadius = '16px';
         editRow.style.background = '#fefce8';
         editRow.style.display = 'flex';
         editRow.style.alignItems = 'center';
         editRow.style.justifyContent = 'space-around';
+        editRow.style.padding = '0 12px';
 
         // 頁數設定
         const pageWrap = document.createElement('div');
@@ -679,7 +658,7 @@
 
         const pageLabel = document.createElement('span');
         pageLabel.textContent = '頁數:';
-        pageLabel.style.fontSize = '24px'; // 放大四個字級
+        pageLabel.style.fontSize = '24px';
         pageLabel.style.fontWeight = '900';
 
         const pageSelect = document.createElement('select');
@@ -707,7 +686,7 @@
 
         const scaleLabel = document.createElement('span');
         scaleLabel.textContent = '比例:';
-        scaleLabel.style.fontSize = '24px'; // 放大四個字級
+        scaleLabel.style.fontSize = '24px';
         scaleLabel.style.fontWeight = '900';
 
         const scaleSelect = document.createElement('select');
@@ -883,7 +862,7 @@
       renderBoard();
     });
 
-    // 切換編輯模式按鈕
+    // 右上角切換編輯模式按鈕
     toggleEditBtn.addEventListener('click', () => {
       setEditMode(!isEditMode);
     });
