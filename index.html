@@ -361,42 +361,42 @@
 
       <!-- 底部操作提示 -->
       <div class="footer-hint">
-        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁（或連點右上編輯按鈕）切換編輯｜在編輯模式下同時按下「朗讀」與「刪除整句」開啟後台
+        提示：點擊「🔊 朗讀」唸出整句｜點右上角「連點切換編輯」進入編輯模式｜在編輯模式下按下「朗讀」與「刪除整句」開啟後台
       </div>
 
-      <!-- 隱藏式管理者後台面板 -->
-      <div id="adminOverlay" class="admin-overlay">
-        <div class="admin-card">
-          <h2>⚙️ 溝通板系統設定 <span style="font-size: 12px; font-weight: normal; color: #666;">Admin</span></h2>
-          
-          <div class="admin-row">
-            <label>九宮格版總頁數：</label>
-            <input type="number" id="inputPages5x3" min="3" max="50" step="1" value="15">
-          </div>
+    </div>
+  </div>
 
-          <div class="admin-row">
-            <label>四乘四版總頁數：</label>
-            <input type="number" id="inputPages6x4" min="3" max="50" step="1" value="11">
-          </div>
-
-          <div class="admin-row">
-            <label>全域字體大小縮放比例：</label>
-            <select id="selectFontScale">
-              <option value="0.85">小 (85%)</option>
-              <option value="1.0" selected>標準 (100%)</option>
-              <option value="1.15">大 (115%)</option>
-              <option value="1.3">特大 (130%)</option>
-              <option value="1.45">超大 (145%)</option>
-            </select>
-          </div>
-
-          <div class="admin-actions">
-            <button id="btnSaveAdmin" class="btn-save">儲存設定</button>
-            <button id="btnCloseAdmin" class="btn-close">取消返回</button>
-          </div>
-        </div>
+  <!-- 將後台彈窗移至 body 最外層，避免被父層 flex 與 overflow 限制遮蔽 -->
+  <div id="adminOverlay" class="admin-overlay" style="display: none;">
+    <div class="admin-card">
+      <h2>⚙️ 溝通板系統設定 <span style="font-size: 12px; font-weight: normal; color: #666;">Admin</span></h2>
+      
+      <div class="admin-row">
+        <label>九宮格版總頁數：</label>
+        <input type="number" id="inputPages5x3" min="3" max="50" step="1" value="15">
       </div>
 
+      <div class="admin-row">
+        <label>四乘四版總頁數：</label>
+        <input type="number" id="inputPages6x4" min="3" max="50" step="1" value="11">
+      </div>
+
+      <div class="admin-row">
+        <label>全域字體大小縮放比例：</label>
+        <select id="selectFontScale">
+          <option value="0.85">小 (85%)</option>
+          <option value="1.0" selected>標準 (100%)</option>
+          <option value="1.15">大 (115%)</option>
+          <option value="1.3">特大 (130%)</option>
+          <option value="1.45">超大 (145%)</option>
+        </select>
+      </div>
+
+      <div class="admin-actions">
+        <button id="btnSaveAdmin" class="btn-save">儲存設定</button>
+        <button id="btnCloseAdmin" class="btn-close">取消返回</button>
+      </div>
     </div>
   </div>
 
@@ -479,24 +479,6 @@
     const btnSaveAdmin = document.getElementById('btnSaveAdmin');
     const btnCloseAdmin = document.getElementById('btnCloseAdmin');
 
-    // 螢幕常亮控制 (Wake Lock)
-    let wakeLock = null;
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-          wakeLock.addEventListener('release', () => { wakeLock = null; });
-        }
-      } catch (err) {}
-    }
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') requestWakeLock();
-    });
-    ['click', 'touchstart', 'pointerdown'].forEach((evt) => {
-      document.addEventListener(evt, () => { if (!wakeLock) requestWakeLock(); }, { once: false });
-    });
-    requestWakeLock();
-
     function getTotalPages() {
       return currentLayout === '5x3' ? adminConfig.totalPages5x3 : adminConfig.totalPages6x4;
     }
@@ -559,11 +541,11 @@
       inputPages5x3.value = adminConfig.totalPages5x3;
       inputPages6x4.value = adminConfig.totalPages6x4;
       selectFontScale.value = adminConfig.fontScale.toString();
-      adminOverlay.style.setProperty('display', 'flex', 'important');
+      adminOverlay.style.cssText = 'display: flex !important; z-index: 2147483647; position: fixed; inset: 0; align-items: center; justify-content: center; background: rgba(0,0,0,0.75);';
     }
 
     function closeAdminPanel() {
-      adminOverlay.style.setProperty('display', 'none', 'important');
+      adminOverlay.style.cssText = 'display: none !important;';
     }
 
     btnSaveAdmin.addEventListener('click', () => {
@@ -728,51 +710,41 @@
       });
     }
 
-    // 編輯模式下同時按住「朗讀」與「刪除整句」觸發後台
-    function bindAdminSpeakAndClear(speakBtn, clearBtn) {
-      let isSpeakDown = false;
-      let isClearDown = false;
+    // 編輯模式下同時或快速交替按下「朗讀」與「刪除整句」觸發後台
+    // 支援手機雙指同時按下，以及電腦單滑鼠在 1 秒內先後點擊兩顆鍵
+    let lastSpeakPressTime = 0;
+    let lastClearPressTime = 0;
 
-      function checkAdminTrigger() {
-        if (isEditMode && isSpeakDown && isClearDown) {
-          isSpeakDown = false;
-          isClearDown = false;
+    function bindAdminSpeakAndClear(speakBtn, clearBtn) {
+      function checkTrigger() {
+        if (!isEditMode) return false;
+        const now = Date.now();
+        // 只要在 1000 毫秒內兩者皆被按下，即視為觸發
+        if (Math.abs(now - lastSpeakPressTime) < 1000 && Math.abs(now - lastClearPressTime) < 1000) {
+          lastSpeakPressTime = 0;
+          lastClearPressTime = 0;
           openAdminPanel();
           return true;
         }
         return false;
       }
 
-      // 朗讀按鈕監聽
-      speakBtn.addEventListener('pointerdown', (e) => {
-        isSpeakDown = true;
-        checkAdminTrigger();
-      });
-      speakBtn.addEventListener('pointerup', (e) => {
-        if (isSpeakDown && !isClearDown) {
-          if (currentInput) speakText(currentInput);
+      speakBtn.addEventListener('pointerdown', () => {
+        lastSpeakPressTime = Date.now();
+        if (checkTrigger()) return;
+        if (!isEditMode && currentInput) {
+          speakText(currentInput);
         }
-        isSpeakDown = false;
       });
-      speakBtn.addEventListener('pointerleave', () => { isSpeakDown = false; });
-      speakBtn.addEventListener('pointercancel', () => { isSpeakDown = false; });
 
-      // 刪除整句按鈕監聽
-      clearBtn.addEventListener('pointerdown', (e) => {
-        isClearDown = true;
-        checkAdminTrigger();
-      });
-      clearBtn.addEventListener('pointerup', (e) => {
-        if (isClearDown && !isSpeakDown) {
-          if (currentInput.length > 0) {
-            currentInput = '';
-            updateDisplayElement(document.getElementById('displayArea'));
-          }
+      clearBtn.addEventListener('pointerdown', () => {
+        lastClearPressTime = Date.now();
+        if (checkTrigger()) return;
+        if (!isEditMode && currentInput.length > 0) {
+          currentInput = '';
+          updateDisplayElement(document.getElementById('displayArea'));
         }
-        isClearDown = false;
       });
-      clearBtn.addEventListener('pointerleave', () => { isClearDown = false; });
-      clearBtn.addEventListener('pointercancel', () => { isClearDown = false; });
     }
 
     // 手勢與翻頁監聽 (雙鍵切換編輯)
@@ -781,13 +753,13 @@
 
     function bindControlGestures(prevBtn, nextBtn) {
       // 上一頁按鈕
-      prevBtn.addEventListener('pointerdown', (e) => {
+      prevBtn.addEventListener('pointerdown', () => {
         isPrevActive = true;
         if (isNextActive) {
           setEditMode(!isEditMode);
         }
       });
-      prevBtn.addEventListener('pointerup', (e) => {
+      prevBtn.addEventListener('pointerup', () => {
         if (isPrevActive && !isNextActive) {
           if (currentPage > 1) { currentPage--; renderBoard(); }
         }
@@ -797,13 +769,13 @@
       prevBtn.addEventListener('pointercancel', () => { isPrevActive = false; });
 
       // 下一頁按鈕
-      nextBtn.addEventListener('pointerdown', (e) => {
+      nextBtn.addEventListener('pointerdown', () => {
         isNextActive = true;
         if (isPrevActive) {
           setEditMode(!isEditMode);
         }
       });
-      nextBtn.addEventListener('pointerup', (e) => {
+      nextBtn.addEventListener('pointerup', () => {
         const total = getTotalPages();
         if (isNextActive && !isPrevActive) {
           if (currentPage < total) { currentPage++; renderBoard(); }
@@ -822,46 +794,15 @@
       renderBoard();
     });
 
-    // 強化：連點 3 次模式徽章打開後台（支援觸控與滑鼠）
-    let badgeClickCount = 0;
-    let badgeClickTimer = null;
-    function triggerBadgeClick(e) {
-      if (e) e.stopPropagation();
-      badgeClickCount++;
-      clearTimeout(badgeClickTimer);
-      if (badgeClickCount >= 3) {
-        openAdminPanel();
-        badgeClickCount = 0;
-      } else {
-        badgeClickTimer = setTimeout(() => { badgeClickCount = 0; }, 1200);
-      }
-    }
-    modeBadge.addEventListener('click', triggerBadgeClick);
-    modeBadge.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      triggerBadgeClick(e);
+    // 備援入口：直接點擊「輸入模式/編輯模式」徽章打開後台，方便電腦端快速除錯
+    modeBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openAdminPanel();
     });
 
-    // 連點切換編輯模式
-    let lastClickTime = 0;
-    let clickTimeout = null;
+    // 切換編輯模式按鈕
     toggleEditBtn.addEventListener('click', () => {
-      const now = new Date().getTime();
-      const diff = now - lastClickTime;
-      if (diff < 400 && diff > 0) {
-        clearTimeout(clickTimeout);
-        setEditMode(!isEditMode);
-        toggleEditBtn.textContent = '連點切換編輯';
-        lastClickTime = 0;
-      } else {
-        lastClickTime = now;
-        toggleEditBtn.textContent = '再點一下切換！';
-        clearTimeout(clickTimeout);
-        clickTimeout = setTimeout(() => {
-          toggleEditBtn.textContent = '連點切換編輯';
-          lastClickTime = 0;
-        }, 1200);
-      }
+      setEditMode(!isEditMode);
     });
 
     // 註冊 PWA 離線 Service Worker（包含安全協定環境檢查）
