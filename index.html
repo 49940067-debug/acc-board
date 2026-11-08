@@ -251,15 +251,15 @@
 
     /* 管理設定後台面板彈窗 */
     .admin-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(4px);
-      z-index: 9999;
+      z-index: 999999;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 12px;
+      padding: 16px;
     }
     .admin-card {
       background: #ffffff;
@@ -361,7 +361,7 @@
 
       <!-- 底部操作提示 -->
       <div class="footer-hint">
-        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁切換編輯｜同時按住左右與刪除開啟設定後台
+        提示：點擊「🔊 朗讀」唸出整句｜同時按住上一頁與下一頁切換編輯｜連點 3 次上方「輸入模式」或三指按住左右與刪除開啟設定
       </div>
 
       <!-- 隱藏式管理者後台面板 -->
@@ -559,11 +559,11 @@
       inputPages5x3.value = adminConfig.totalPages5x3;
       inputPages6x4.value = adminConfig.totalPages6x4;
       selectFontScale.value = adminConfig.fontScale.toString();
-      adminOverlay.style.display = 'flex';
+      adminOverlay.style.setProperty('display', 'flex', 'important');
     }
 
     function closeAdminPanel() {
-      adminOverlay.style.display = 'none';
+      adminOverlay.style.setProperty('display', 'none', 'important');
     }
 
     btnSaveAdmin.addEventListener('click', () => {
@@ -737,71 +737,84 @@
     }
 
     // 手勢與按鈕監聽 (三鍵開啟管理後台、雙鍵開啟編輯)
+    let isPrevActive = false;
+    let isNextActive = false;
+    let isDeleteActive = false;
+    let gestureLockTimer = null;
+
+    function checkAdminCombo() {
+      if (isPrevActive && isNextActive && isDeleteActive) {
+        openAdminPanel();
+        isPrevActive = false;
+        isNextActive = false;
+        isDeleteActive = false;
+        return true;
+      }
+      return false;
+    }
+
     function bindControlGestures(prevBtn, delCharBtn, clearBtn, nextBtn) {
-      let isPrevDown = false;
-      let isNextDown = false;
-      let isDeleteDown = false;
-
-      function checkAdminTrigger() {
-        if (isPrevDown && isNextDown && isDeleteDown) {
-          openAdminPanel();
-          isPrevDown = false;
-          isNextDown = false;
-          isDeleteDown = false;
-          return true;
+      // 上一頁按鈕
+      prevBtn.addEventListener('pointerdown', (e) => {
+        isPrevActive = true;
+        if (!checkAdminCombo()) {
+          if (isNextActive && !isDeleteActive) {
+            setEditMode(!isEditMode);
+          }
         }
-        return false;
-      }
-
-      function checkEditTrigger() {
-        if (isPrevDown && isNextDown && !isDeleteDown) {
-          setEditMode(!isEditMode);
-          isPrevDown = false;
-          isNextDown = false;
-        }
-      }
-
-      prevBtn.addEventListener('pointerdown', () => {
-        isPrevDown = true;
-        if (!checkAdminTrigger()) checkEditTrigger();
       });
-      prevBtn.addEventListener('pointerup', () => {
-        if (isPrevDown && !isNextDown && !isDeleteDown) {
+      prevBtn.addEventListener('pointerup', (e) => {
+        if (isPrevActive && !isNextActive && !isDeleteActive) {
           if (currentPage > 1) { currentPage--; renderBoard(); }
         }
-        isPrevDown = false;
+        isPrevActive = false;
       });
-      prevBtn.addEventListener('pointerleave', () => { isPrevDown = false; });
+      prevBtn.addEventListener('pointerleave', () => { isPrevActive = false; });
+      prevBtn.addEventListener('pointercancel', () => { isPrevActive = false; });
 
-      nextBtn.addEventListener('pointerdown', () => {
-        isNextDown = true;
-        if (!checkAdminTrigger()) checkEditTrigger();
+      // 下一頁按鈕
+      nextBtn.addEventListener('pointerdown', (e) => {
+        isNextActive = true;
+        if (!checkAdminCombo()) {
+          if (isPrevActive && !isDeleteActive) {
+            setEditMode(!isEditMode);
+          }
+        }
       });
-      nextBtn.addEventListener('pointerup', () => {
+      nextBtn.addEventListener('pointerup', (e) => {
         const total = getTotalPages();
-        if (isNextDown && !isPrevDown && !isDeleteDown) {
+        if (isNextActive && !isPrevActive && !isDeleteActive) {
           if (currentPage < total) { currentPage++; renderBoard(); }
         }
-        isNextDown = false;
+        isNextActive = false;
       });
-      nextBtn.addEventListener('pointerleave', () => { isNextDown = false; });
+      nextBtn.addEventListener('pointerleave', () => { isNextActive = false; });
+      nextBtn.addEventListener('pointercancel', () => { isNextActive = false; });
 
+      // 刪除按鍵（刪除整句）
       if (clearBtn) {
-        clearBtn.addEventListener('pointerdown', () => {
-          isDeleteDown = true;
-          checkAdminTrigger();
+        clearBtn.addEventListener('pointerdown', (e) => {
+          isDeleteActive = true;
+          checkAdminCombo();
         });
-        clearBtn.addEventListener('pointerup', () => { isDeleteDown = false; });
-        clearBtn.addEventListener('pointerleave', () => { isDeleteDown = false; });
+        clearBtn.addEventListener('pointerup', () => {
+          setTimeout(() => { isDeleteActive = false; }, 100);
+        });
+        clearBtn.addEventListener('pointerleave', () => { isDeleteActive = false; });
+        clearBtn.addEventListener('pointercancel', () => { isDeleteActive = false; });
       }
 
+      // 刪除按鍵（刪除單字，若存在）
       if (delCharBtn) {
-        delCharBtn.addEventListener('pointerdown', () => {
-          isDeleteDown = true;
-          checkAdminTrigger();
+        delCharBtn.addEventListener('pointerdown', (e) => {
+          isDeleteActive = true;
+          checkAdminCombo();
         });
-        delCharBtn.addEventListener('pointerup', () => { isDeleteDown = false; });
-        delCharBtn.addEventListener('pointerleave', () => { isDeleteDown = false; });
+        delCharBtn.addEventListener('pointerup', () => {
+          setTimeout(() => { isDeleteActive = false; }, 100);
+        });
+        delCharBtn.addEventListener('pointerleave', () => { isDeleteActive = false; });
+        delCharBtn.addEventListener('pointercancel', () => { isDeleteActive = false; });
       }
     }
 
@@ -813,18 +826,24 @@
       renderBoard();
     });
 
-    // 桌面連點 3 次模式徽章打開後台
+    // 強化：連點 3 次模式徽章打開後台（支援觸控與滑鼠）
     let badgeClickCount = 0;
     let badgeClickTimer = null;
-    modeBadge.addEventListener('click', () => {
+    function triggerBadgeClick(e) {
+      if (e) e.stopPropagation();
       badgeClickCount++;
       clearTimeout(badgeClickTimer);
       if (badgeClickCount >= 3) {
         openAdminPanel();
         badgeClickCount = 0;
       } else {
-        badgeClickTimer = setTimeout(() => { badgeClickCount = 0; }, 800);
+        badgeClickTimer = setTimeout(() => { badgeClickCount = 0; }, 1200);
       }
+    }
+    modeBadge.addEventListener('click', triggerBadgeClick);
+    modeBadge.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      triggerBadgeClick(e);
     });
 
     // 連點切換編輯模式
