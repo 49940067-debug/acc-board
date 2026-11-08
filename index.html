@@ -775,11 +775,11 @@
       clearBtn.addEventListener('click', handleClear);
     }
 
-    // 手勢與翻頁監聽 (雙鍵切換編輯)
-    let isPrevActive = false;
-    let isNextActive = false;
-
+    // 雙鍵手勢控制：同時按住 上一頁 + 下一頁 切換編輯模式
     function bindControlGestures(prevBtn, nextBtn) {
+      let isPrevActive = false;
+      let isNextActive = false;
+
       // 上一頁按鈕
       prevBtn.addEventListener('pointerdown', () => {
         isPrevActive = true;
