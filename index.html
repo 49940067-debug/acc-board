@@ -249,7 +249,7 @@
       flex-shrink: 0;
     }
 
-    /* 後台彈出面板 */
+    /* 管理設定後台面板彈窗 */
     .admin-overlay {
       position: absolute;
       inset: 0;
@@ -351,7 +351,7 @@
           <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
         </div>
         <div class="action-group">
-          <div id="modeBadge" class="pill-badge" title="連點 3 次亦可打開管理後台">輸入模式</div>
+          <div id="modeBadge" class="pill-badge" title="連點 3 次打開管理後台">輸入模式</div>
           <button id="toggleEditBtn" class="btn-edit-toggle">連點切換編輯</button>
         </div>
       </div>
@@ -367,15 +367,15 @@
       <!-- 隱藏式管理者後台面板 -->
       <div id="adminOverlay" class="admin-overlay">
         <div class="admin-card">
-          <h2>⚙️ 溝通板系統設定 <span style="font-size: 12px; font-weight: normal; color: #666;">v19 Admin</span></h2>
+          <h2>⚙️ 溝通板系統設定 <span style="font-size: 12px; font-weight: normal; color: #666;">Admin</span></h2>
           
           <div class="admin-row">
-            <label>九宮格版總頁數 (目前上限)：</label>
+            <label>九宮格版總頁數：</label>
             <input type="number" id="inputPages5x3" min="3" max="50" step="1" value="15">
           </div>
 
           <div class="admin-row">
-            <label>四乘四版總頁數 (目前上限)：</label>
+            <label>四乘四版總頁數：</label>
             <input type="number" id="inputPages6x4" min="3" max="50" step="1" value="11">
           </div>
 
@@ -401,7 +401,7 @@
   </div>
 
   <script>
-    // 預設四乘四版
+    // 預設四乘四版（11 頁詞庫，第 6 頁空白中樞）
     const DEFAULT_6X4 = {
       1: Array(16).fill(''),
       2: ['擦嘴巴', '換姿勢', '蓋被子', '拿枕頭', '要吸痰', '拍拍背', '按摩', '剪指甲', '擦身體', '漱口', '喝溫水', '喝果汁', '吃稀飯', '吃水果', '想吃肉', '要喝湯'],
@@ -416,7 +416,7 @@
       11: Array(16).fill('')
     };
 
-    // 預設九宮格版
+    // 預設九宮格版（15 頁詞庫，第 8 頁空白中樞）
     const DEFAULT_5X3 = {
       1: Array(9).fill(''),
       2: ['吃白飯', '喝溫水', '吃稀飯', '喝果汁', '吃水果', '想吃肉', '要喝湯', '吃飽了', '還想吃'],
@@ -436,23 +436,23 @@
     };
 
     // 讀取管理者設定或預設值
-    let adminConfig = JSON.parse(localStorage.getItem('aac_admin_config_v19')) || {
+    let adminConfig = JSON.parse(localStorage.getItem('aac_admin_config_v20')) || {
       totalPages5x3: 15,
       totalPages6x4: 11,
       fontScale: 1.0
     };
 
-    // 套用字體縮放
+    // 套用字體縮放變數
     document.documentElement.style.setProperty('--aac-font-scale', adminConfig.fontScale || 1.0);
 
-    let currentLayout = localStorage.getItem('aac_layout_mode_v19') || '5x3';
+    let currentLayout = localStorage.getItem('aac_layout_mode_v20') || '5x3';
     let currentPage = currentLayout === '5x3' 
       ? Math.ceil(adminConfig.totalPages5x3 / 2) 
       : Math.ceil(adminConfig.totalPages6x4 / 2);
     let isEditMode = false;
 
-    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v19')) || DEFAULT_6X4;
-    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v19')) || DEFAULT_5X3;
+    let data6x4 = JSON.parse(localStorage.getItem('aac_data_6x4_v20')) || DEFAULT_6X4;
+    let data5x3 = JSON.parse(localStorage.getItem('aac_data_5x3_v20')) || DEFAULT_5X3;
     let currentInput = localStorage.getItem('aac_current_input') || '';
 
     // 自動補齊設定頁數陣列
@@ -479,9 +479,7 @@
     const btnSaveAdmin = document.getElementById('btnSaveAdmin');
     const btnCloseAdmin = document.getElementById('btnCloseAdmin');
 
-    // ==========================================
-    // 螢幕常亮控制（Screen Wake Lock API）
-    // ==========================================
+    // 螢幕常亮控制 (Wake Lock)
     let wakeLock = null;
     async function requestWakeLock() {
       try {
@@ -505,13 +503,13 @@
 
     function saveCurrentData() {
       if (currentLayout === '6x4') {
-        localStorage.setItem('aac_data_6x4_v19', JSON.stringify(data6x4));
+        localStorage.setItem('aac_data_6x4_v20', JSON.stringify(data6x4));
       } else {
-        localStorage.setItem('aac_data_5x3_v19', JSON.stringify(data5x3));
+        localStorage.setItem('aac_data_5x3_v20', JSON.stringify(data5x3));
       }
       localStorage.setItem('aac_current_input', currentInput);
-      localStorage.setItem('aac_layout_mode_v19', currentLayout);
-      localStorage.setItem('aac_admin_config_v19', JSON.stringify(adminConfig));
+      localStorage.setItem('aac_layout_mode_v20', currentLayout);
+      localStorage.setItem('aac_admin_config_v20', JSON.stringify(adminConfig));
     }
 
     function speakText(text) {
@@ -738,11 +736,7 @@
       });
     }
 
-    // =========================================================================
-    // 手勢管理：
-    // 1. 同時按下 上一頁 + 下一頁 -> 切換編輯模式
-    // 2. 同時按下 上一頁 + 刪除鍵 + 下一頁 (三鍵同時) -> 呼叫管理者設定後台
-    // =========================================================================
+    // 手勢與按鈕監聽 (三鍵開啟管理後台、雙鍵開啟編輯)
     function bindControlGestures(prevBtn, delCharBtn, clearBtn, nextBtn) {
       let isPrevDown = false;
       let isNextDown = false;
@@ -767,7 +761,6 @@
         }
       }
 
-      // 上一頁監聽
       prevBtn.addEventListener('pointerdown', () => {
         isPrevDown = true;
         if (!checkAdminTrigger()) checkEditTrigger();
@@ -780,22 +773,19 @@
       });
       prevBtn.addEventListener('pointerleave', () => { isPrevDown = false; });
 
-      // 下一頁監聽
       nextBtn.addEventListener('pointerdown', () => {
         isNextDown = true;
         if (!checkAdminTrigger()) checkEditTrigger();
       });
       nextBtn.addEventListener('pointerup', () => {
         const total = getTotalPages();
-        if (nextDownValid() && !isPrevDown && !isDeleteDown) {
+        if (isNextDown && !isPrevDown && !isDeleteDown) {
           if (currentPage < total) { currentPage++; renderBoard(); }
         }
         isNextDown = false;
       });
-      function nextDownValid() { return isNextDown; }
       nextBtn.addEventListener('pointerleave', () => { isNextDown = false; });
 
-      // 刪除整句按鍵監聽
       if (clearBtn) {
         clearBtn.addEventListener('pointerdown', () => {
           isDeleteDown = true;
@@ -805,7 +795,6 @@
         clearBtn.addEventListener('pointerleave', () => { isDeleteDown = false; });
       }
 
-      // 刪除單字按鍵監聽 (若有)
       if (delCharBtn) {
         delCharBtn.addEventListener('pointerdown', () => {
           isDeleteDown = true;
@@ -824,7 +813,7 @@
       renderBoard();
     });
 
-    // 桌面備援：連點 3 次模式徽章打開後台
+    // 桌面連點 3 次模式徽章打開後台
     let badgeClickCount = 0;
     let badgeClickTimer = null;
     modeBadge.addEventListener('click', () => {
@@ -838,7 +827,7 @@
       }
     });
 
-    // 連點切換編輯
+    // 連點切換編輯模式
     let lastClickTime = 0;
     let clickTimeout = null;
     toggleEditBtn.addEventListener('click', () => {
@@ -861,11 +850,18 @@
     });
 
     // 註冊 PWA 離線 Service Worker
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('PWA Service Worker 註冊成功:', reg.scope))
-          .catch((err) => console.error('PWA Service Worker 註冊失敗:', err));
+        try {
+          const swUrl = new URL('./sw.js', window.location.href);
+          if (swUrl.protocol === 'https:' || swUrl.protocol === 'http:') {
+            navigator.serviceWorker.register(swUrl.href)
+              .then((reg) => console.log('PWA Service Worker 註冊成功:', reg.scope))
+              .catch((err) => console.warn('PWA Service Worker 註冊略過或失敗:', err));
+          }
+        } catch (e) {
+          console.warn('非標準網頁環境，略過 Service Worker 註冊');
+        }
       });
     }
 
