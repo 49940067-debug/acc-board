@@ -352,8 +352,6 @@
           <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
         </div>
         <div class="action-group">
-          <!-- 編輯模式下直接顯示醒目的開啟後台按鈕 -->
-          <button id="btnDirectAdmin" class="btn-switch" style="display: none; background: #dc2626; border-color: #dc2626; color: #fff;">⚙️ 後台設定</button>
           <div id="modeBadge" class="pill-badge">輸入模式</div>
           <button id="toggleEditBtn" class="btn-edit-toggle">切換編輯</button>
         </div>
@@ -364,53 +362,7 @@
 
       <!-- 底部操作提示 -->
       <div class="footer-hint">
-        提示：點擊「🔊 朗讀」唸出整句｜點右上角「切換編輯」｜在編輯模式下按「朗讀」與「刪除整句」進入滿版後台
-      </div>
-
-    </div>
-  </div>
-
-  <!-- 滿版獨立後台容器 (取代浮動彈窗，避免任何圖層遮擋問題) -->
-  <div id="adminContainer" class="app-container" style="display: none; background-color: #f3f4f6;">
-    <div class="board-card" style="padding: 16px; justify-content: space-between;">
-      
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 20px;">
-          <h1 style="font-size: 26px; font-weight: 900;">⚙️ 溝通板後台設定</h1>
-          <span style="font-size: 14px; font-weight: bold; background: #000; color: #fff; padding: 4px 10px; border-radius: 9999px;">管理模式</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-          <div class="admin-row">
-            <label style="font-size: 18px; font-weight: 900;">九宮格版總頁數 (目前 3 ~ 50 頁)：</label>
-            <input type="number" id="inputPages5x3" min="3" max="50" step="1" value="15" style="border: 3px solid #000; border-radius: 12px; padding: 12px; font-size: 20px; font-weight: bold;">
-          </div>
-
-          <div class="admin-row">
-            <label style="font-size: 18px; font-weight: 900;">四乘四版總頁數 (目前 3 ~ 50 頁)：</label>
-            <input type="number" id="inputPages6x4" min="3" max="50" step="1" value="11" style="border: 3px solid #000; border-radius: 12px; padding: 12px; font-size: 20px; font-weight: bold;">
-          </div>
-
-          <div class="admin-row">
-            <label style="font-size: 18px; font-weight: 900;">全域字體大小縮放：</label>
-            <select id="selectFontScale" style="border: 3px solid #000; border-radius: 12px; padding: 12px; font-size: 20px; font-weight: bold; background: #fff;">
-              <option value="0.85">小 (85%)</option>
-              <option value="1.0" selected>標準 (100%)</option>
-              <option value="1.15">大 (115%)</option>
-              <option value="1.3">特大 (130%)</option>
-              <option value="1.45">超大 (145%)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 12px; margin-top: 20px;">
-        <button id="btnSaveAdmin" style="flex: 2; background: #000; color: #fff; border: 3px solid #000; border-radius: 16px; padding: 16px; font-size: 20px; font-weight: 900; cursor: pointer;">
-          💾 儲存並返回溝通板
-        </button>
-        <button id="btnCloseAdmin" style="flex: 1; background: #fff; color: #000; border: 3px solid #000; border-radius: 16px; padding: 16px; font-size: 20px; font-weight: 900; cursor: pointer;">
-          ✕ 取消返回
-        </button>
+        提示：點擊「🔊 朗讀」唸出整句｜點右上角「切換編輯」｜編輯模式下上方可直接調整頁數與顯示比例
       </div>
 
     </div>
@@ -483,20 +435,11 @@
     ensurePagesCapacity();
 
     const boardContainer = document.getElementById('boardContainer');
-    const adminContainer = document.getElementById('adminContainer');
-
     const pageIndicator = document.getElementById('pageIndicator');
     const layoutSwitchBtn = document.getElementById('layoutSwitchBtn');
     const modeBadge = document.getElementById('modeBadge');
     const toggleEditBtn = document.getElementById('toggleEditBtn');
-    const btnDirectAdmin = document.getElementById('btnDirectAdmin');
     const mainGrid = document.getElementById('mainGrid');
-
-    const inputPages5x3 = document.getElementById('inputPages5x3');
-    const inputPages6x4 = document.getElementById('inputPages6x4');
-    const selectFontScale = document.getElementById('selectFontScale');
-    const btnSaveAdmin = document.getElementById('btnSaveAdmin');
-    const btnCloseAdmin = document.getElementById('btnCloseAdmin');
 
     function getTotalPages() {
       return currentLayout === '5x3' ? adminConfig.totalPages5x3 : adminConfig.totalPages6x4;
@@ -548,54 +491,13 @@
         modeBadge.textContent = '✏️ 編輯模式';
         modeBadge.style.background = '#000000';
         modeBadge.style.color = '#ffffff';
-        if (btnDirectAdmin) btnDirectAdmin.style.display = 'inline-block';
       } else {
         modeBadge.textContent = '輸入模式';
         modeBadge.style.background = '#ffffff';
         modeBadge.style.color = '#000000';
-        if (btnDirectAdmin) btnDirectAdmin.style.display = 'none';
       }
       renderBoard();
     }
-
-    // 滿版切換進入後台
-    function openAdminPanel() {
-      inputPages5x3.value = adminConfig.totalPages5x3;
-      inputPages6x4.value = adminConfig.totalPages6x4;
-      selectFontScale.value = adminConfig.fontScale.toString();
-      
-      boardContainer.style.display = 'none';
-      adminContainer.style.display = 'flex';
-    }
-
-    // 滿版切換回溝通板
-    function closeAdminPanel() {
-      adminContainer.style.display = 'none';
-      boardContainer.style.display = 'flex';
-      renderBoard();
-    }
-
-    btnSaveAdmin.addEventListener('click', () => {
-      const p5 = parseInt(inputPages5x3.value, 10);
-      const p6 = parseInt(inputPages6x4.value, 10);
-      const fs = parseFloat(selectFontScale.value);
-
-      if (p5 >= 3 && p5 <= 50) adminConfig.totalPages5x3 = p5;
-      if (p6 >= 3 && p6 <= 50) adminConfig.totalPages6x4 = p6;
-      if (fs) {
-        adminConfig.fontScale = fs;
-        document.documentElement.style.setProperty('--aac-font-scale', fs);
-      }
-
-      ensurePagesCapacity();
-      const total = getTotalPages();
-      if (currentPage > total) currentPage = total;
-
-      saveCurrentData();
-      closeAdminPanel();
-    });
-
-    btnCloseAdmin.addEventListener('click', closeAdminPanel);
 
     function renderBoard() {
       const total = getTotalPages();
@@ -615,17 +517,113 @@
       const container = document.createElement('div');
       container.className = 'layout-6x4';
 
-      const dispArea = document.createElement('div');
-      dispArea.className = 'display-box col-span-3';
-      const dispText = document.createElement('div');
-      dispText.id = 'displayArea';
-      dispText.title = '點擊朗讀整句';
-      dispText.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
-      dispArea.appendChild(dispText);
+      if (isEditMode) {
+        // 編輯模式第一列：就地下拉選單（敘述文字放大 4 個字級約 24px）
+        const editRow = document.createElement('div');
+        editRow.className = 'col-span-3 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-around bg-yellow-50 overflow-hidden';
+        editRow.style.border = '3px solid #000';
+        editRow.style.borderRadius = '16px';
+        editRow.style.background = '#fefce8';
+        editRow.style.display = 'flex';
+        editRow.style.alignItems = 'center';
+        editRow.style.justifyContent = 'space-around';
 
-      const speakBtn = createActionBtn('🔊', '朗讀', () => {});
-      container.appendChild(dispArea);
-      container.appendChild(speakBtn);
+        // 頁數設定
+        const pageWrap = document.createElement('div');
+        pageWrap.style.display = 'flex';
+        pageWrap.style.alignItems = 'center';
+        pageWrap.style.gap = '8px';
+
+        const pageLabel = document.createElement('span');
+        pageLabel.textContent = '頁數:';
+        pageLabel.style.fontSize = '24px'; // 放大四個字級
+        pageLabel.style.fontWeight = '900';
+
+        const pageSelect = document.createElement('select');
+        pageSelect.style.fontSize = '20px';
+        pageSelect.style.fontWeight = 'bold';
+        pageSelect.style.padding = '4px 8px';
+        pageSelect.style.borderRadius = '8px';
+        pageSelect.style.border = '2.5px solid #000';
+        [7, 9, 11, 13, 15, 20, 25, 30].forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = `${p} 頁`;
+          if (p === adminConfig.totalPages6x4) opt.selected = true;
+          pageSelect.appendChild(opt);
+        });
+
+        pageWrap.appendChild(pageLabel);
+        pageWrap.appendChild(pageSelect);
+
+        // 比例設定
+        const scaleWrap = document.createElement('div');
+        scaleWrap.style.display = 'flex';
+        scaleWrap.style.alignItems = 'center';
+        scaleWrap.style.gap = '8px';
+
+        const scaleLabel = document.createElement('span');
+        scaleLabel.textContent = '比例:';
+        scaleLabel.style.fontSize = '24px'; // 放大四個字級
+        scaleLabel.style.fontWeight = '900';
+
+        const scaleSelect = document.createElement('select');
+        scaleSelect.style.fontSize = '20px';
+        scaleSelect.style.fontWeight = 'bold';
+        scaleSelect.style.padding = '4px 8px';
+        scaleSelect.style.borderRadius = '8px';
+        scaleSelect.style.border = '2.5px solid #000';
+        [
+          { val: 0.85, name: '85%' },
+          { val: 1.0, name: '100%' },
+          { val: 1.15, name: '115%' },
+          { val: 1.3, name: '130%' },
+          { val: 1.45, name: '145%' }
+        ].forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.val;
+          opt.textContent = s.name;
+          if (Math.abs(s.val - adminConfig.fontScale) < 0.05) opt.selected = true;
+          scaleSelect.appendChild(opt);
+        });
+
+        scaleWrap.appendChild(scaleLabel);
+        scaleWrap.appendChild(scaleSelect);
+
+        editRow.appendChild(pageWrap);
+        editRow.appendChild(scaleWrap);
+
+        // 原朗讀鍵位置改為儲存鍵
+        const saveBtn = createActionBtn('💾', '儲存', () => {
+          adminConfig.totalPages6x4 = parseInt(pageSelect.value, 10);
+          adminConfig.fontScale = parseFloat(scaleSelect.value);
+          document.documentElement.style.setProperty('--aac-font-scale', adminConfig.fontScale);
+          ensurePagesCapacity();
+          if (currentPage > adminConfig.totalPages6x4) currentPage = adminConfig.totalPages6x4;
+          saveCurrentData();
+          renderBoard();
+        });
+        saveBtn.style.background = '#22c55e';
+        saveBtn.style.color = '#ffffff';
+
+        container.appendChild(editRow);
+        container.appendChild(saveBtn);
+      } else {
+        // 輸入模式原本的文字框與朗讀按鈕
+        const dispArea = document.createElement('div');
+        dispArea.className = 'display-box col-span-3';
+        const dispText = document.createElement('div');
+        dispText.id = 'displayArea';
+        dispText.title = '點擊朗讀整句';
+        dispText.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
+        dispArea.appendChild(dispText);
+
+        const speakBtn = createActionBtn('🔊', '朗讀', () => {
+          if (currentInput) speakText(currentInput);
+        });
+        container.appendChild(dispArea);
+        container.appendChild(speakBtn);
+      }
 
       const prevBtn = createNavBtn('◀', '上一頁');
       const delCharBtn = createActionBtn('⌫', '刪除單字', () => {
@@ -634,7 +632,12 @@
           updateDisplayElement(document.getElementById('displayArea'));
         }
       });
-      const clearBtn = createActionBtn('🗑', '刪除整句', () => {});
+      const clearBtn = createActionBtn('🗑', '刪除整句', () => {
+        if (currentInput.length > 0) {
+          currentInput = '';
+          updateDisplayElement(document.getElementById('displayArea'));
+        }
+      });
       const nextBtn = createNavBtn('▶', '下一頁');
 
       container.appendChild(prevBtn);
@@ -649,8 +652,7 @@
 
       mainGrid.appendChild(container);
       bindControlGestures(prevBtn, nextBtn);
-      bindAdminSpeakAndClear(speakBtn, clearBtn);
-      updateDisplayElement(document.getElementById('displayArea'));
+      if (!isEditMode) updateDisplayElement(document.getElementById('displayArea'));
     }
 
     // 渲染九宮格
@@ -658,20 +660,121 @@
       const container = document.createElement('div');
       container.className = 'layout-5x3';
 
-      const dispArea = document.createElement('div');
-      dispArea.className = 'display-box col-span-2';
-      const dispText = document.createElement('div');
-      dispText.id = 'displayArea';
-      dispText.title = '點擊朗讀整句';
-      dispText.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
-      dispArea.appendChild(dispText);
+      if (isEditMode) {
+        // 編輯模式第一列：就地下拉選單（敘述文字放大 4 個字級約 24px）
+        const editRow = document.createElement('div');
+        editRow.className = 'col-span-2 border-[3px] border-black rounded-2xl px-2 sm:px-4 flex items-center justify-around bg-yellow-50 overflow-hidden';
+        editRow.style.border = '3px solid #000';
+        editRow.style.borderRadius = '16px';
+        editRow.style.background = '#fefce8';
+        editRow.style.display = 'flex';
+        editRow.style.alignItems = 'center';
+        editRow.style.justifyContent = 'space-around';
 
-      const speakBtn = createActionBtn('🔊', '朗讀', () => {});
-      container.appendChild(dispArea);
-      container.appendChild(speakBtn);
+        // 頁數設定
+        const pageWrap = document.createElement('div');
+        pageWrap.style.display = 'flex';
+        pageWrap.style.alignItems = 'center';
+        pageWrap.style.gap = '8px';
+
+        const pageLabel = document.createElement('span');
+        pageLabel.textContent = '頁數:';
+        pageLabel.style.fontSize = '24px'; // 放大四個字級
+        pageLabel.style.fontWeight = '900';
+
+        const pageSelect = document.createElement('select');
+        pageSelect.style.fontSize = '20px';
+        pageSelect.style.fontWeight = 'bold';
+        pageSelect.style.padding = '4px 8px';
+        pageSelect.style.borderRadius = '8px';
+        pageSelect.style.border = '2.5px solid #000';
+        [7, 9, 11, 13, 15, 21, 25, 31].forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = `${p} 頁`;
+          if (p === adminConfig.totalPages5x3) opt.selected = true;
+          pageSelect.appendChild(opt);
+        });
+
+        pageWrap.appendChild(pageLabel);
+        pageWrap.appendChild(pageSelect);
+
+        // 比例設定
+        const scaleWrap = document.createElement('div');
+        scaleWrap.style.display = 'flex';
+        scaleWrap.style.alignItems = 'center';
+        scaleWrap.style.gap = '8px';
+
+        const scaleLabel = document.createElement('span');
+        scaleLabel.textContent = '比例:';
+        scaleLabel.style.fontSize = '24px'; // 放大四個字級
+        scaleLabel.style.fontWeight = '900';
+
+        const scaleSelect = document.createElement('select');
+        scaleSelect.style.fontSize = '20px';
+        scaleSelect.style.fontWeight = 'bold';
+        scaleSelect.style.padding = '4px 8px';
+        scaleSelect.style.borderRadius = '8px';
+        scaleSelect.style.border = '2.5px solid #000';
+        [
+          { val: 0.85, name: '85%' },
+          { val: 1.0, name: '100%' },
+          { val: 1.15, name: '115%' },
+          { val: 1.3, name: '130%' },
+          { val: 1.45, name: '145%' }
+        ].forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.val;
+          opt.textContent = s.name;
+          if (Math.abs(s.val - adminConfig.fontScale) < 0.05) opt.selected = true;
+          scaleSelect.appendChild(opt);
+        });
+
+        scaleWrap.appendChild(scaleLabel);
+        scaleWrap.appendChild(scaleSelect);
+
+        editRow.appendChild(pageWrap);
+        editRow.appendChild(scaleWrap);
+
+        // 原朗讀鍵位置改為儲存鍵
+        const saveBtn = createActionBtn('💾', '儲存', () => {
+          adminConfig.totalPages5x3 = parseInt(pageSelect.value, 10);
+          adminConfig.fontScale = parseFloat(scaleSelect.value);
+          document.documentElement.style.setProperty('--aac-font-scale', adminConfig.fontScale);
+          ensurePagesCapacity();
+          if (currentPage > adminConfig.totalPages5x3) currentPage = adminConfig.totalPages5x3;
+          saveCurrentData();
+          renderBoard();
+        });
+        saveBtn.style.background = '#22c55e';
+        saveBtn.style.color = '#ffffff';
+
+        container.appendChild(editRow);
+        container.appendChild(saveBtn);
+      } else {
+        // 輸入模式原本的文字框與朗讀按鈕
+        const dispArea = document.createElement('div');
+        dispArea.className = 'display-box col-span-2';
+        const dispText = document.createElement('div');
+        dispText.id = 'displayArea';
+        dispText.title = '點擊朗讀整句';
+        dispText.addEventListener('click', () => { if (currentInput) speakText(currentInput); });
+        dispArea.appendChild(dispText);
+
+        const speakBtn = createActionBtn('🔊', '朗讀', () => {
+          if (currentInput) speakText(currentInput);
+        });
+        container.appendChild(dispArea);
+        container.appendChild(speakBtn);
+      }
 
       const prevBtn = createNavBtn('◀', '上一頁');
-      const clearBtn = createActionBtn('🗑', '刪除整句', () => {});
+      const clearBtn = createActionBtn('🗑', '刪除整句', () => {
+        if (currentInput.length > 0) {
+          currentInput = '';
+          updateDisplayElement(document.getElementById('displayArea'));
+        }
+      });
       const nextBtn = createNavBtn('▶', '下一頁');
 
       container.appendChild(prevBtn);
@@ -685,8 +788,7 @@
 
       mainGrid.appendChild(container);
       bindControlGestures(prevBtn, nextBtn);
-      bindAdminSpeakAndClear(speakBtn, clearBtn);
-      updateDisplayElement(document.getElementById('displayArea'));
+      if (!isEditMode) updateDisplayElement(document.getElementById('displayArea'));
     }
 
     function createActionBtn(icon, label, onClick) {
@@ -736,51 +838,11 @@
       });
     }
 
-    // 編輯模式下同時或快速交替按下「朗讀」與「刪除整句」觸發後台
-    let lastSpeakPressTime = 0;
-    let lastClearPressTime = 0;
-
-    function bindAdminSpeakAndClear(speakBtn, clearBtn) {
-      function checkTrigger() {
-        if (!isEditMode) return false;
-        const now = Date.now();
-        // 只要在 2000 毫秒內兩者皆有點擊或同時按住，即切換至滿版後台
-        if (Math.abs(now - lastSpeakPressTime) < 2000 && Math.abs(now - lastClearPressTime) < 2000) {
-          lastSpeakPressTime = 0;
-          lastClearPressTime = 0;
-          openAdminPanel();
-          return true;
-        }
-        return false;
-      }
-
-      function handleSpeak() {
-        lastSpeakPressTime = Date.now();
-        if (checkTrigger()) return;
-        if (!isEditMode && currentInput) {
-          speakText(currentInput);
-        }
-      }
-
-      function handleClear() {
-        lastClearPressTime = Date.now();
-        if (checkTrigger()) return;
-        if (!isEditMode && currentInput.length > 0) {
-          currentInput = '';
-          updateDisplayElement(document.getElementById('displayArea'));
-        }
-      }
-
-      speakBtn.addEventListener('click', handleSpeak);
-      clearBtn.addEventListener('click', handleClear);
-    }
-
     // 雙鍵手勢控制：同時按住 上一頁 + 下一頁 切換編輯模式
     function bindControlGestures(prevBtn, nextBtn) {
       let isPrevActive = false;
       let isNextActive = false;
 
-      // 上一頁按鈕
       prevBtn.addEventListener('pointerdown', () => {
         isPrevActive = true;
         if (isNextActive) {
@@ -796,7 +858,6 @@
       prevBtn.addEventListener('pointerleave', () => { isPrevActive = false; });
       prevBtn.addEventListener('pointercancel', () => { isPrevActive = false; });
 
-      // 下一頁按鈕
       nextBtn.addEventListener('pointerdown', () => {
         isNextActive = true;
         if (isPrevActive) {
@@ -822,24 +883,12 @@
       renderBoard();
     });
 
-    // 實體按鈕：進入編輯模式後直接點擊紅色按鈕開啟後台
-    btnDirectAdmin.addEventListener('click', () => {
-      openAdminPanel();
-    });
-
-    // 徽章入口：在「編輯模式」下點擊黑色徽章亦可開啟後台
-    modeBadge.addEventListener('click', () => {
-      if (isEditMode) {
-        openAdminPanel();
-      }
-    });
-
     // 切換編輯模式按鈕
     toggleEditBtn.addEventListener('click', () => {
       setEditMode(!isEditMode);
     });
 
-    // 註冊 PWA 離線 Service Worker（包含安全協定環境檢查）
+    // 註冊 PWA 離線 Service Worker
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
       window.addEventListener('load', () => {
         try {
