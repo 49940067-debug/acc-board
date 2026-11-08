@@ -352,7 +352,9 @@
           <button id="layoutSwitchBtn" class="btn-switch">切換為四乘四</button>
         </div>
         <div class="action-group">
-          <div id="modeBadge" class="pill-badge" title="編輯模式下點擊開啟後台">輸入模式</div>
+          <!-- 編輯模式下直接顯示醒目的開啟後台按鈕 -->
+          <button id="btnDirectAdmin" class="btn-switch" style="display: none; background: #dc2626; border-color: #dc2626; color: #fff;">⚙️ 後台設定</button>
+          <div id="modeBadge" class="pill-badge">輸入模式</div>
           <button id="toggleEditBtn" class="btn-edit-toggle">切換編輯</button>
         </div>
       </div>
@@ -487,6 +489,7 @@
     const layoutSwitchBtn = document.getElementById('layoutSwitchBtn');
     const modeBadge = document.getElementById('modeBadge');
     const toggleEditBtn = document.getElementById('toggleEditBtn');
+    const btnDirectAdmin = document.getElementById('btnDirectAdmin');
     const mainGrid = document.getElementById('mainGrid');
 
     const inputPages5x3 = document.getElementById('inputPages5x3');
@@ -545,10 +548,12 @@
         modeBadge.textContent = '✏️ 編輯模式';
         modeBadge.style.background = '#000000';
         modeBadge.style.color = '#ffffff';
+        if (btnDirectAdmin) btnDirectAdmin.style.display = 'inline-block';
       } else {
         modeBadge.textContent = '輸入模式';
         modeBadge.style.background = '#ffffff';
         modeBadge.style.color = '#000000';
+        if (btnDirectAdmin) btnDirectAdmin.style.display = 'none';
       }
       renderBoard();
     }
@@ -739,8 +744,8 @@
       function checkTrigger() {
         if (!isEditMode) return false;
         const now = Date.now();
-        // 只要在 1500 毫秒內兩者皆有點擊或同時按住，即切換至滿版後台
-        if (Math.abs(now - lastSpeakPressTime) < 1500 && Math.abs(now - lastClearPressTime) < 1500) {
+        // 只要在 2000 毫秒內兩者皆有點擊或同時按住，即切換至滿版後台
+        if (Math.abs(now - lastSpeakPressTime) < 2000 && Math.abs(now - lastClearPressTime) < 2000) {
           lastSpeakPressTime = 0;
           lastClearPressTime = 0;
           openAdminPanel();
@@ -749,22 +754,25 @@
         return false;
       }
 
-      speakBtn.addEventListener('pointerdown', () => {
+      function handleSpeak() {
         lastSpeakPressTime = Date.now();
         if (checkTrigger()) return;
         if (!isEditMode && currentInput) {
           speakText(currentInput);
         }
-      });
+      }
 
-      clearBtn.addEventListener('pointerdown', () => {
+      function handleClear() {
         lastClearPressTime = Date.now();
         if (checkTrigger()) return;
         if (!isEditMode && currentInput.length > 0) {
           currentInput = '';
           updateDisplayElement(document.getElementById('displayArea'));
         }
-      });
+      }
+
+      speakBtn.addEventListener('click', handleSpeak);
+      clearBtn.addEventListener('click', handleClear);
     }
 
     // 手勢與翻頁監聽 (雙鍵切換編輯)
@@ -814,9 +822,13 @@
       renderBoard();
     });
 
-    // 徽章入口：僅在「編輯模式」下點擊才可滿版切換進入後台，輸入模式下無反應防誤觸
-    modeBadge.addEventListener('click', (e) => {
-      e.stopPropagation();
+    // 實體按鈕：進入編輯模式後直接點擊紅色按鈕開啟後台
+    btnDirectAdmin.addEventListener('click', () => {
+      openAdminPanel();
+    });
+
+    // 徽章入口：在「編輯模式」下點擊黑色徽章亦可開啟後台
+    modeBadge.addEventListener('click', () => {
       if (isEditMode) {
         openAdminPanel();
       }
